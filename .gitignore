@@ -7,4 +7,6 @@
 *.bbl
 *.blg
 
-phoneme.pdf
+doc/phoneme.pdf
+
+wav_stat
