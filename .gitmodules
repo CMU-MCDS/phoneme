@@ -1,0 +1,3 @@
+[submodule "modules/persephone"]
+	path = modules/persephone
+	url = git@github.com:yuhsianglin/persephone.git
