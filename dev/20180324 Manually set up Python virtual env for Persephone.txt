@@ -1,0 +1,48 @@
+The things that I need to install:
+(see also https://pypi.python.org/pypi/persephone)
+
+(I set up a new virtual env)
+
+[pylint (==1.8.2)]
+python -m pip install astroid
+python -m pip install isort
+pip install pylint==1.8.2
+(probably don't need to do the first two?)
+
+pip install pympi-ling==1.69
+
+pip install scikit-learn==0.19.1
+
+pip install tensorflow==1.4.1
+
+pip install scipy==1.0.0
+
+pip install python-speech-features==0.6
+
+pip install numpy==1.14.0
+
+pip install nltk==3.2.5
+
+pip install GitPython==2.1.8
+
+pip install ipython==6.2.1
+
+====================
+
+Go to
+	modules/persephone/persephone/config.py
+and change the last line
+	LOGGING_INI_PATH = ... => fallback="./modules/persephone/logging.ini"
+
+-------------
+
+while running, I found that I need to:
+
+pip install pydub
+
+pip install pint
+
+========================
+
+
+
