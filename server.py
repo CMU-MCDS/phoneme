@@ -3,10 +3,17 @@ from flask import request, redirect, url_for
 from flask import send_from_directory
 from werkzeug.utils import secure_filename
 
+import os
+import sys
+import inspect
+import time
+
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir) 
+
 from modules.persephone.persephone import corpus, corpus_reader, rnn_ctc
 
-import os
-import time
 
 UPLOAD_FOLDER = "./_uploads"
 if not os.path.exists(UPLOAD_FOLDER):

@@ -34,6 +34,15 @@ Go to
 and change the last line
 	LOGGING_INI_PATH = ... => fallback="./modules/persephone/logging.ini"
 
+--
+	
+	[maybe not...]
+
+	also the line before it:
+
+	=>
+	logging_ini_path = resource_filename(Requirement.parse("persephone"), "./modules/persephone/logging.ini")
+
 -------------
 
 while running, I found that I need to:
@@ -43,6 +52,14 @@ pip install pydub
 pip install pint
 
 ========================
+
+======================
+
+[To use server.py]
+
+pip install flask==0.12.2
+
+
 
 
 
