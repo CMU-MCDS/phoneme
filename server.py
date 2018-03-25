@@ -6,11 +6,7 @@ from werkzeug.utils import secure_filename
 import os
 import sys
 import inspect
-import time
-
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.insert(0, parentdir) 
+import time 
 
 from modules.persephone.persephone import corpus, corpus_reader, rnn_ctc
 
