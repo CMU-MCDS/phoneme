@@ -16,3 +16,8 @@ git merge origin/yhl
 cd note/20180327\ Server\ demo/
 python server.py
 ```
+
+When done, exit virtual environment with
+```
+deactivate
+```
