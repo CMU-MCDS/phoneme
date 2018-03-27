@@ -6,7 +6,7 @@ import os
 import time
 
 
-UPLOAD_FOLDER = './upload'
+UPLOAD_FOLDER = './_uploads'
 if not os.path.exists(UPLOAD_FOLDER):
   os.makedirs(UPLOAD_FOLDER)
 
