@@ -17,6 +17,11 @@ cd note/20180327\ Server\ demo/
 python server.py
 ```
 
+In browser, go to
+```
+http://127.0.0.1:5000
+```
+
 When done, exit virtual environment with
 ```
 deactivate
