@@ -15,6 +15,8 @@ gitignore
 model_na_example
 
 _uploads
+_train
+_exp
 
 log.txt
 

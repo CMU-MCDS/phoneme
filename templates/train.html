@@ -1,0 +1,28 @@
+<title>Training new Persephone model</title>
+<h1>You Have successfully uploaded the file. Now start trianing a Persephone model!</h1>
+
+<h1>Check to see if training file matches the requirement</h1>
+
+
+<form action="/check_train_file/" method="post">
+    <button name="submit" type="submit">Check File</button>
+</form>
+
+<body>
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class=flashes>
+    {% for message in messages %}
+      <li>{{ message }}</li>
+    {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+{% block body %}{% endblock %}
+</body>
+
+<h1>Click the button to train a new persephone model</h1>
+<form action="/train_new/" method="post">
+    <button name="submit" type="submit">Train</button>
+</form>
+
