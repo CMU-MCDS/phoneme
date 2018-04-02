@@ -18,9 +18,6 @@ git checkout -b mcds
 git merge origin/mcds
 
 cd ../..
-git checkout -b yhl
-git merge origin/yhl
-
 python server.py
 ```
 
