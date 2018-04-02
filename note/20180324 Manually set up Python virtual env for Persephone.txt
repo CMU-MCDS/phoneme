@@ -3,11 +3,7 @@ The things that I need to install:
 
 (I set up a new virtual env)
 
-[pylint (==1.8.2)]
-python -m pip install astroid
-python -m pip install isort
 pip install pylint==1.8.2
-(probably don't need to do the first two?)
 
 pip install pympi-ling==1.69
 
@@ -60,6 +56,8 @@ pip install pint
 pip install flask==0.12.2
 
 
+================
 
+pip install -r requirements.txt
 
 
