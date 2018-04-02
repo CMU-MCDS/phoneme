@@ -1,12 +1,11 @@
-from flask import Flask, render_template, flash
-from flask import request, redirect, url_for
+from flask import Flask, render_template
+from flask import request, redirect, url_for, flash
 from flask import send_from_directory
 from werkzeug.utils import secure_filename
-
 import os
 import sys
 import inspect
-import time 
+import time
 
 from modules.persephone.persephone import corpus, corpus_reader, rnn_ctc
 
@@ -38,10 +37,22 @@ def index():
         return redirect(request.url)
 
     if file:
-        filename = werkzeug.utils.secure_filename(file.filename)
-        file.save(os.path.join(app.config["UPLOAD_FOLDER"], "wav", filename))
+        filename = secure_filename(file.filename)
 
-        prefix_file = open("UPLOAD_FOLDER" + "/untranscribed_prefixes.txt", "w+")
+        wav_path = os.path.join(UPLOAD_FOLDER, "wav")
+        if not os.path.exists(wav_path):
+            os.makedirs(wav_path)
+
+        file.save(os.path.join(wav_path, filename))
+
+        # Empty label file
+        label_path = os.path.join(UPLOAD_FOLDER, "label")
+        if not os.path.exists(label_path):
+            os.makedirs(label_path)
+        empty_label_file = open(os.path.join(UPLOAD_FOLDER, "label", filename[:-4] + ".phonemes"), "w+")
+        empty_label_file.close()
+
+        prefix_file = open(os.path.join(UPLOAD_FOLDER, "untranscribed_prefixes.txt"), "w+")
         # Drop the extension ".wav" to get prefix
         prefix_file.write(filename[:-4] + "\n")
         prefix_file.close()
@@ -60,7 +71,7 @@ def transcription(filename):
 
     model.transcribe(restore_model_path = "../model_na_example/model_best.ckpt")
 
-    return send_from_directory(app.config["UPLOAD_FOLDER"] + "/transcriptions", "hyps.txt")
+    return send_from_directory(os.path.join(UPLOAD_FOLDER, "transcriptions"), "hyps.txt")
 
 if __name__ == "__main__":
     app.run(debug = True)
