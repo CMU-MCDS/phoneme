@@ -1,3 +1,5 @@
+# Prototype usage
+
 1. Download the git repo with submodules.
 ```
 git clone --recurse-submodules git@github.com:CMU-MCDS/phoneme.git [target directory]
@@ -25,8 +27,20 @@ python server.py
 ```
 http://127.0.0.1:5000
 ```
+The training files must be prepared as a `.zip` file, which include a `wav` directory containing the wav files and a `label` directory containing the corresponding label files.
+The untranscribed files must be prepared as a `.zip` file, which include a `wav` directory containing the wav files.
 
 5. When done, exit virtual environment with
 ```
 deactivate
 ```
+
+# Potential next steps
+1) Integrate the interface with Moses
+2) Back-end API for transcribing new wav audio
+3) Improve the design/implementation API: 
+	- TODO: output the model performance and progress back to the interface
+	- TODO: allow user to specify batch size, num_train, num_layers, and hidden size 
+	- TODO: implement functions to check the format of the uploaded data. 
+	- TODO: Consider what kind of files are supported and what if users uploaded multiple files
+	- TODO: add some functions to organize the uploaded data and manage different experiments. (if user uploaded multiple batches of data, the interface needs to allow user select a particular training batch)
