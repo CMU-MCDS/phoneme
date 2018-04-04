@@ -206,7 +206,7 @@ def transcribe():
 
   na_corpus = corpus.ReadyCorpus(os.path.join(TRANSCRIBE_DIR, app.config["TRANSCRIBE_PREFIX"]), label_file_path=label_file_path, transcribe_new=True)
   na_reader = corpus_reader.CorpusReader(na_corpus, batch_size=batch_size, transcribe_new=True)
-  model = rnn_ctc.Model(TRANSCRIBE_EXP_DIR, na_reader, num_layers=2, hidden_size=250, transcribe_new=True)
+  model = rnn_ctc.Model(TRANSCRIBE_EXP_DIR, na_reader, num_layers=2, hidden_size=250)
   model.transcribe(restore_model_path="./_exp/model/model_best.ckpt")
 
   return send_from_directory(os.path.join(TRANSCRIBE_EXP_DIR, "transcriptions"), "hyps.txt")
