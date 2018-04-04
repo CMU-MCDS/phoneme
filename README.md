@@ -2,9 +2,9 @@
 
 1. Download the git repo with submodules.
 ```
-git clone --recurse-submodules git@github.com:CMU-MCDS/phoneme.git [target directory]
+git clone --recurse-submodules git@github.com:CMU-MCDS/phoneme.git <TargetDir>
 ```
-The `[target directory]` can be any name you want to put this git repo in. In this README, we assume it to be `phoneme`.
+The `<TargetDir>` can be any name you want to put this git repo in. In this README, we assume it to be `phoneme`.
 
 2. Set up the python virtual environment (ideally outside the directory `phoneme`).
 ```
@@ -27,9 +27,11 @@ python server.py
 ```
 http://127.0.0.1:5000
 ```
-The training files must be prepared as a `.zip` file, which include a `wav` directory containing the wav files and a `label` directory containing the corresponding label files.
+The training files must be prepared as a `<TrainData>.zip` file, where `<TrainData>` is the name of the dataset. This zip file should include a directory with the same name `<TrainData>`. This directory should then include a directory called `wav` containing the wav files, and a directory called `label` containing the corresponding label files.
 
-The untranscribed files must be prepared as a `.zip` file, which include a `wav` directory containing the wav files.
+The untranscribed files must be prepared in the same way as the training files are, except that the `label` directory is not needed.
+
+Sample datasets are provided in the directory `sample_data`.
 
 5. When done, exit virtual environment with
 ```

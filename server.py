@@ -105,6 +105,7 @@ def upload_train():
 
   # Check if wav and label folders are uploaded
   if not os.path.exists(os.path.join(TRAIN_DIR, app.config["TRAIN_PREFIX"], "wav")):
+    print(os.path.join(TRAIN_DIR, app.config["TRAIN_PREFIX"], "wav"))
     flash("You do not have a wav folder")
     return redirect(request.url)
 
@@ -128,7 +129,7 @@ def train():
 
   # TODO: Have users input num_train and batch_size
   num_train = len(os.listdir(os.path.join(TRAIN_DIR, app.config["TRAIN_PREFIX"], "wav")))
-  batch_size = 14   # Hard code for my debugging dataset for now
+  batch_size = 7   # Hard code for my debugging dataset for now
   min_epochs = 1
   max_epochs = 10
 
@@ -199,9 +200,9 @@ def transcribe():
     return render_template("transcribe.html")
 
   # TODO: Have users input num_train and batch_size
-  batch_size = 14   # Hard code for my debugging dataset for now
+  batch_size = 64   # Hard code for my debugging dataset for now
 
-  label_file_path = "./_train/na_example_tiny/phoneme_set.txt"
+  label_file_path = "./_train/na_train_tiny/phoneme_set.txt"
 
   na_corpus = corpus.ReadyCorpus(os.path.join(TRANSCRIBE_DIR, app.config["TRANSCRIBE_PREFIX"]), label_file_path=label_file_path, transcribe_new=True)
   na_reader = corpus_reader.CorpusReader(na_corpus, batch_size=batch_size, transcribe_new=True)
