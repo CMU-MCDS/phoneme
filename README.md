@@ -28,6 +28,7 @@ python server.py
 http://127.0.0.1:5000
 ```
 The training files must be prepared as a `.zip` file, which include a `wav` directory containing the wav files and a `label` directory containing the corresponding label files.
+
 The untranscribed files must be prepared as a `.zip` file, which include a `wav` directory containing the wav files.
 
 5. When done, exit virtual environment with
