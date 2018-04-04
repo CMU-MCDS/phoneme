@@ -1,7 +1,13 @@
 <!doctype html>
 
-<title>Training new Persephone model</title>
+<title>Upload training data</title>
 <meta charset=utf-8>
+
+<h1>Upload a training Zip file</h1>
+<form method="post" enctype="multipart/form-data">
+  <p><input type="file" name="file">
+     <input type="submit" value="Upload">
+</form>
 
 <body>
 {% with messages = get_flashed_messages() %}
@@ -15,8 +21,3 @@
 {% endwith %}
 {% block body %}{% endblock %}
 </body>
-
-<h1>Click the button to train a new Persephone model</h1>
-<form action="/train/" method="post">
-    <button name="submit" type="submit">Train</button>
-</form>
