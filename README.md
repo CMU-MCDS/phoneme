@@ -26,7 +26,7 @@ python manage.py runserver
 
 4. In browser, go to
 ```
-http://127.0.0.1:5000
+http://127.0.0.1:8000
 ```
 The training files must be prepared as a `<TrainData>.zip` file, where `<TrainData>` is the name of the dataset. This zip file should include a directory with the same name `<TrainData>`. This directory should then include a directory called `wav` containing the wav files, and a directory called `label` containing the corresponding label files.
 
