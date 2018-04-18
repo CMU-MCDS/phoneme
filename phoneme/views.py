@@ -18,6 +18,12 @@ def home(request):
         os.makedirs(TRANSCRIBE_DIR)
     if not os.path.exists(TRANSCRIBE_EXP_DIR):
         os.makedirs(TRANSCRIBE_EXP_DIR)
+    # configs["UPLOAD_DIR"] = UPLOAD_DIR
+    # configs["TRAIN_DIR"] = TRAIN_DIR
+    # configs["EXP_DIR"] = EXP_DIR
+    # configs["TRANSCRIBE_UPLOAD_DIR"] = TRANSCRIBE_UPLOAD_DIR
+    # configs["TRANSCRIBE_DIR"] = TRANSCRIBE_DIR
+    # configs["TRANSCRIBE_EXP_DIR"] = TRANSCRIBE_EXP_DIR
     return render(request, "phoneme/index.html", {})
         
 def upload_train(request):
@@ -159,7 +165,6 @@ def upload_transcribe(request):
     num_transcribe = len(os.listdir(os.path.join(TRANSCRIBE_DIR, configs["TRANSCRIBE_PREFIX"], "wav")))
     context['message'] ="Successfully added " + str(num_transcribe) + " untranscribed files"
     print("Successfully added " + str(num_transcribe) + " untranscribed files")
-    configs['TRANSCRIBE_PREFIX']=None
     return render(request, 'phoneme/transcribe.html', context)
 
     pass
