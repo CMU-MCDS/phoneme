@@ -20,7 +20,8 @@ git checkout -b mcds
 git merge origin/mcds
 
 cd ../..
-python server.py
+python manage.py migrate
+python manage.py runserver
 ```
 
 4. In browser, go to

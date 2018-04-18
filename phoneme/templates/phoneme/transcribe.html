@@ -1,0 +1,19 @@
+<!doctype html>
+
+<title>Transcribe</title>
+<meta charset=utf-8>
+
+<body>
+  {% if message %}
+    <ul class=flashes>
+      <li>{{ message }}</li>
+    </ul>
+  {% endif %}
+{% block body %}{% endblock %}
+</body>
+
+<h1>Click the button to transcribe</h1>
+<form action="{% url 'transcribe' %}" method="post">
+    <button name="submit" type="submit">Transcribe</button>
+    {% csrf_token %}
+</form>

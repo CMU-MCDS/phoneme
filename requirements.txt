@@ -11,3 +11,4 @@ ipython==6.2.1
 pydub
 pint
 flask==0.12.2
+django==1.11

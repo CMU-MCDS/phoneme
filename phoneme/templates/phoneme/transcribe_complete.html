@@ -1,0 +1,20 @@
+<!doctype html>
+
+<title>Training complete</title>
+<meta charset=utf-8>
+
+<body>
+  {% if message %}
+    <ul class=flashes>
+      <li>{{ message }}</li>
+    </ul>
+  {% endif %}
+  <br>
+{% block body %}
+    {% if file_content %}
+        {{ file_content }}
+    {% endif %}
+{% endblock %}
+</body>
+
+<a href="{% url 'home' %}">Go back to interface homepage</a>
