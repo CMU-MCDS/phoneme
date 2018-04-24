@@ -11,17 +11,26 @@ import zipfile
 from modules.persephone.persephone import corpus, corpus_reader, rnn_ctc
 
 
+TRANSCRIBED_DATA_DIR = "./_transcribed_data"
+if not os.path.exists(TRANSCRIBED_DATA_DIR):
+  os.makedirs(TRANSCRIBED_DATA_DIR)
+
+MODELS_DIR = "./_models"
+if not os.path.exists(MODELS_DIR):
+  os.makedirs(MODELS_DIR)
+
+
+"""
 UPLOAD_DIR = "./_uploads"
 if not os.path.exists(UPLOAD_DIR):
   os.makedirs(UPLOAD_DIR)
 
-TRAIN_DIR = "./_train"
-if not os.path.exists(TRAIN_DIR):
-  os.makedirs(TRAIN_DIR)
-
 EXP_DIR = "./_exp"
 if not os.path.exists(EXP_DIR):
   os.makedirs(EXP_DIR)
+"""
+
+
 
 TRANSCRIBE_UPLOAD_DIR = "./_transcribe_uploads"
 if not os.path.exists(TRANSCRIBE_UPLOAD_DIR):
@@ -37,9 +46,9 @@ if not os.path.exists(TRANSCRIBE_EXP_DIR):
 
 
 app = Flask(__name__)
-app.config["UPLOAD_DIR"] = UPLOAD_DIR
-app.config["TRAIN_DIR"] = TRAIN_DIR
-app.config["EXP_DIR"] = EXP_DIR
+#app.config["UPLOAD_DIR"] = UPLOAD_DIR
+app.config["TRANSCRIBED_DATA_DIR"] = TRANSCRIBED_DATA_DIR
+#app.config["EXP_DIR"] = EXP_DIR
 app.config["TRANSCRIBE_UPLOAD_DIR"] = TRANSCRIBE_UPLOAD_DIR
 app.config["TRANSCRIBE_DIR"] = TRANSCRIBE_DIR
 app.config["TRANSCRIBE_EXP_DIR"] = TRANSCRIBE_EXP_DIR
@@ -78,16 +87,20 @@ def upload_train():
   if not file:
     return redirect(request.url)
 
-  file.save(os.path.join(UPLOAD_DIR, secure_filename(file.filename)))
+  #file.save(os.path.join(UPLOAD_DIR, secure_filename(file.filename)))
+  file.filename = secure_filename(file.filename)
+  print("file.filename =", file.filename)
 
-  for f in os.listdir(UPLOAD_DIR):
-    if f.endswith(".zip"):
-      zip_ref = zipfile.ZipFile(os.path.join(UPLOAD_DIR, f), "r")
-      zip_ref.extractall(TRAIN_DIR)
-      app.config["TRAIN_PREFIX"] = f[:-4]
-      # Here we only select the first zip file we found
-      # In the future, users should be able to select a particular training batch
-      break
+  #for f in os.listdir(UPLOAD_DIR):
+  #if f.endswith(".zip"):
+  if file.filename.endswith(".zip"):
+    #zip_ref = zipfile.ZipFile(os.path.join(UPLOAD_DIR, f), "r")
+    zip_ref = zipfile.ZipFile(file, "r")
+    zip_ref.extractall(TRANSCRIBED_DATA_DIR)
+    app.config["TRAIN_PREFIX"] = file.filename[:-4]
+    # Here we only select the first zip file we found
+    # In the future, users should be able to select a particular training batch
+    #break
 
   if not app.config["TRAIN_PREFIX"]:
     flash("Zip file not found")
@@ -104,18 +117,18 @@ def upload_train():
   # particular training batch)
 
   # Check if wav and label folders are uploaded
-  if not os.path.exists(os.path.join(TRAIN_DIR, app.config["TRAIN_PREFIX"], "wav")):
-    print(os.path.join(TRAIN_DIR, app.config["TRAIN_PREFIX"], "wav"))
+  if not os.path.exists(os.path.join(TRANSCRIBED_DATA_DIR, app.config["TRAIN_PREFIX"], "wav")):
+    print(os.path.join(TRANSCRIBED_DATA_DIR, app.config["TRAIN_PREFIX"], "wav"))
     flash("You do not have a wav folder")
     return redirect(request.url)
 
-  if not os.path.exists(os.path.join(TRAIN_DIR, app.config["TRAIN_PREFIX"], "label")):
+  if not os.path.exists(os.path.join(TRANSCRIBED_DATA_DIR, app.config["TRAIN_PREFIX"], "label")):
     flash("You do not have a label folder")
     return redirect(request.url)
 
   # TODO: check how many training files were uploaded and if filenames of wav and labels match each other
 
-  num_train = len(os.listdir(os.path.join(TRAIN_DIR, app.config["TRAIN_PREFIX"], "wav")))
+  num_train = len(os.listdir(os.path.join(TRANSCRIBED_DATA_DIR, app.config["TRAIN_PREFIX"], "wav")))
   flash("Successfully added " + str(num_train) + " training files")
   print("Successfully added " + str(num_train) + " training files")
 
@@ -128,14 +141,18 @@ def train():
     return render_template("train.html")
 
   # TODO: Have users input num_train and batch_size
-  num_train = len(os.listdir(os.path.join(TRAIN_DIR, app.config["TRAIN_PREFIX"], "wav")))
-  batch_size = 7   # Hard code for my debugging dataset for now
-  min_epochs = 1
-  max_epochs = 10
+  app.config["TRAIN_PREFIX"] = request.form["dataset"]
+  #num_train = len(os.listdir(os.path.join(TRANSCRIBED_DATA_DIR, app.config["TRAIN_PREFIX"], "wav")))
+  num_train = int(request.form["num_train"])
+  batch_size = int(request.form["batch_size"])
+  min_epochs = int(request.form["min_epochs"])
+  max_epochs = int(request.form["max_epochs"])
 
-  na_corpus = corpus.ReadyCorpus(os.path.join(TRAIN_DIR, app.config["TRAIN_PREFIX"]))
+  model_dir = os.path.join(MODELS_DIR, app.config["TRAIN_PREFIX"])
+
+  na_corpus = corpus.ReadyCorpus(os.path.join(TRANSCRIBED_DATA_DIR, app.config["TRAIN_PREFIX"]))
   na_reader = corpus_reader.CorpusReader(na_corpus, num_train=num_train, batch_size=batch_size)
-  model = rnn_ctc.Model(EXP_DIR, na_reader, num_layers=2, hidden_size=250)
+  model = rnn_ctc.Model(model_dir, na_reader, num_layers=2, hidden_size=250)
   model.train(min_epochs=min_epochs, max_epochs=max_epochs)
 
   print("\nTraining completed")

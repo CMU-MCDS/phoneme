@@ -17,6 +17,12 @@
 </body>
 
 <h1>Click the button to train a new Persephone model</h1>
+
 <form action="/train/" method="post">
-    <button name="submit" type="submit">Train</button>
+  Dataset name: <input type="text" name="dataset"><br>
+  Number of training instances: <input type="text" name="num_train"><br>
+  Batch size: <input type="text" name="batch_size"><br>
+  Minimum number of epochs: <input type="text" name="min_epochs"><br>
+  Maximum number of epochs: <input type="text" name="max_epochs"><br>
+  <button name="submit" type="submit">Train</button>
 </form>
