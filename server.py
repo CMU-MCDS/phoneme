@@ -7,6 +7,7 @@ import sys
 import inspect
 import time
 import zipfile
+import json
 
 from modules.persephone.persephone import corpus, corpus_reader, rnn_ctc
 
@@ -15,9 +16,17 @@ UPLOAD_DIR = "./_uploads"
 if not os.path.exists(UPLOAD_DIR):
   os.makedirs(UPLOAD_DIR)
 
+UPLOAD_DIR_GLOSSING = "./_uploads_glossing"
+if not os.path.exists(UPLOAD_DIR_GLOSSING):
+  os.makedirs(UPLOAD_DIR_GLOSSING)
+
 TRAIN_DIR = "./_train"
 if not os.path.exists(TRAIN_DIR):
   os.makedirs(TRAIN_DIR)
+
+TRAIN_DIR_GLOSSING = "./_train_glossing"
+if not os.path.exists(TRAIN_DIR_GLOSSING):
+  os.makedirs(TRAIN_DIR_GLOSSING)
 
 EXP_DIR = "./_exp"
 if not os.path.exists(EXP_DIR):
@@ -35,8 +44,16 @@ TRANSCRIBE_EXP_DIR = "./_transcribe_exp"
 if not os.path.exists(TRANSCRIBE_EXP_DIR):
   os.makedirs(TRANSCRIBE_EXP_DIR)
 
+GLOSS_DICT_DIR = "./_glossing_dict/"
+assert(os.path.exists(GLOSS_DICT_DIR))
 
 app = Flask(__name__)
+#Directories for glossing suggestion algorithm
+app.config["UPLOAD_DIR_GLOSSING"] = UPLOAD_DIR_GLOSSING
+app.config["TRAIN_DIR_GLOSSING"] = TRAIN_DIR_GLOSSING
+app.config["GLOSS_DICT_DIR"] = GLOSS_DICT_DIR
+
+
 app.config["UPLOAD_DIR"] = UPLOAD_DIR
 app.config["TRAIN_DIR"] = TRAIN_DIR
 app.config["EXP_DIR"] = EXP_DIR
@@ -212,5 +229,156 @@ def transcribe():
   return send_from_directory(os.path.join(TRANSCRIBE_EXP_DIR, "transcriptions"), "hyps.txt")
 
 
+@app.route("/upload_glossing_train/", methods = ['GET','POST'])
+def upload_glossing_train():
+  if request.method == "GET":
+    return render_template("upload_glossing_train.html")
+
+  print("request.files =", request.files)
+  print("request.url =", request.url)
+
+  # Check if the POST request has the file part
+  if "file" not in request.files:
+    flash("No file part")
+    return redirect(request.url)
+
+  file = request.files["file"]
+
+  # If user does not select file, browser would also submit a empty part
+  # without filename
+  if file.filename == "":
+    flash("No selected file")
+    return redirect(request.url)
+
+  if not file:
+    return redirect(request.url)
+
+  file.save(os.path.join(UPLOAD_DIR_GLOSSING, secure_filename(file.filename)))
+
+  for f in os.listdir(UPLOAD_DIR_GLOSSING):
+    if f.endswith(".zip"):
+      zip_ref = zipfile.ZipFile(os.path.join(UPLOAD_DIR_GLOSSING, f), "r")
+      zip_ref.extractall(TRAIN_DIR_GLOSSING)
+
+      break
+
+  #Check if the uploaded zip contains the correct files
+  print(os.path.join(TRAIN_DIR_GLOSSING, 'phoneme.txt'))
+  if not os.path.exists(os.path.join(TRAIN_DIR_GLOSSING, 'phoneme.txt')):
+    flash("You do not have a phoneme.txt")
+    return redirect(request.url)
+  if not os.path.exists(os.path.join(TRAIN_DIR_GLOSSING, 'translation.txt')):
+    flash("You do not have a translation.txt")
+    return redirect(request.url)
+
+  flash("Training data uploaded Successful")
+  return redirect(url_for("train_glossing"))
+
+
+@app.route("/train_glossing/", methods = ["GET", "POST"])
+def train_glossing():
+  if request.method == "GET":
+    return render_template("train_glossing.html")
+  
+  cmd = 'bash /home/chianyuc/run_moses.sh phoneme.txt translate.txt'
+  os.system(cmd)
+
+  print("\nTraining completed")
+  flash("Completed extracting dictionary")
+
+  return render_template("train_complete.html")
+
+
+@app.route("/upload_glossing/", methods = ['GET','POST'])
+def upload_glossing():
+  if request.method == "GET":
+    return render_template("upload_glossing.html")
+  # Check if the POST request has the file part
+  if "file" not in request.files:
+    flash("No file part")
+    return redirect(request.url)
+
+  file = request.files["file"]
+
+  # If user does not select file, browser would also submit a empty part
+  # without filename
+  if file.filename == "":
+    flash("No selected file")
+    return redirect(request.url)
+
+  if not file:
+    return redirect(request.url)
+
+  file.save(os.path.join(UPLOAD_DIR_GLOSSING, secure_filename(file.filename)))
+
+  output = []
+  #Load the trained dictionary to generate glossing: create a dropdown list for user to choose a trained dictionary
+  gloss_dictionary_list = []
+  for dict_name in  os.listdir(GLOSS_DICT_DIR): 
+    gloss_dictionary_list.append(os.path.join(GLOSS_DICT_DIR, dict_name))
+
+  return render_template("upload_glossing.html", gloss_dict = gloss_dictionary_list)
+
+
+
+@app.route("/suggest_glossing/",methods = ['GET','POST'])
+def suggest_glossing():
+  # if request.method == "GET":
+  #   return render_template("suggest_glossing.html")
+
+
+  # print("request.files =", request.files)
+  # print("request.url =", request.url)
+
+  # # Check if the POST request has the file part
+  # if "file" not in request.files:
+  #   flash("No file part")
+  #   return redirect(request.url)
+
+  # file = request.files["file"]
+
+  # # If user does not select file, browser would also submit a empty part
+  # # without filename
+  # if file.filename == "":
+  #   flash("No selected file")
+  #   return redirect(request.url)
+
+  # if not file:
+  #   return redirect(request.url)
+
+  # file.save(os.path.join(UPLOAD_DIR_GLOSSING, secure_filename(file.filename)))
+  
+
+  output = []
+  # #Load the trained dictionary to generate glossing: create a dropdown list for user to choose a trained dictionary
+  # gloss_dictionary_list = []
+  # for dict_name in  os.listdir(GLOSS_DICT_DIR): 
+  #   gloss_dictionary_list.append(os.path.join(GLOSS_DICT_DIR, dict_name))
+
+  #Get user's selected dict
+  selected_dict = request.form['gloss_dict']
+  #print(selected_dict)
+  gloss_dictionary = json.load(open(selected_dict))
+  #print(gloss_dictionary)
+
+  with open(os.path.join(UPLOAD_DIR_GLOSSING, 'new_phoneme.txt')) as f:
+    for original_sent in f:
+      original_sent = original_sent.strip().split(" ")
+      output_gloss = []
+      for phoneme_group in original_sent:
+        try:
+          gloss = gloss_dictionary[phoneme_group]
+        except:
+          gloss = "NA"
+        output_gloss.append(gloss)
+      
+      output.append([original_sent, output_gloss])
+
+  return render_template("suggest_glossing.html", gloss_generated = output)
+
+
+
+
+
 if __name__ == "__main__":
-  app.run(debug=True)
+  app.run(debug=True,host= '0.0.0.0',port=4000)

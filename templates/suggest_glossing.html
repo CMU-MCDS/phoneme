@@ -1,0 +1,18 @@
+<!doctype html>
+
+<!-- <title>Upload testing data</title> -->
+<meta charset=utf-8>
+
+<!-- <h1>Upload a txt file</h1>
+<form method="post" enctype="multipart/form-data">
+  <p><input type="file" name="file">
+     <input type="submit" value="Upload">
+</form>
+ -->
+
+<h1>Suggested gloss</h1>
+
+{% for original, gloss in gloss_generated %}
+                        original: {{ original }} <br/>
+                        gloss: {{ gloss }} <br/>
+                    {% endfor %}

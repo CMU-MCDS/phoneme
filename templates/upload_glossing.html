@@ -1,0 +1,25 @@
+<!doctype html>
+
+<title>Upload testing data</title>
+<meta charset=utf-8>
+
+<h1>Upload a txt file: please name your file new_phoneme.txt</h1>
+<form method="post" enctype="multipart/form-data">
+  <p><input type="file" name="file">
+     <input type="submit" value="Upload">
+</form>
+
+<h2>Select a trained dictionary to generate glossing suggestions</h2>
+<form class="gloss_dict_form" form action="/suggest_glossing/" method="post">
+    <div class="input-group">
+	    <select name= gloss_dict>
+	    {% for dict in gloss_dict %}
+	    <option value= "{{dict}}" SELECTED>{{dict}}</option>"
+	    {% endfor %}
+		</select>
+    </div>
+    <button type="submit" class="btn btn-default">Go</button>
+</form>
+
+
+

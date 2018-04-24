@@ -20,6 +20,10 @@ _exp
 _transcribe/
 _transcribe_exp/
 _transcribe_uploads/
+_glossing_dict/
+_train_glossing/
+_uploads_glossing
+
 
 log.txt
 
