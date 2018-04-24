@@ -24,9 +24,9 @@ UNTRANSCRIBED_DATA_DIR = "./_untranscribed_data"
 if not os.path.exists(UNTRANSCRIBED_DATA_DIR):
   os.makedirs(UNTRANSCRIBED_DATA_DIR)
 
-TRANSCRIBE_RESULT_DIR = "./_transcribe_result"
-if not os.path.exists(TRANSCRIBE_RESULT_DIR):
-  os.makedirs(TRANSCRIBE_RESULT_DIR)
+TRANSCRIBE_RESULTS_DIR = "./_transcribe_results"
+if not os.path.exists(TRANSCRIBE_RESULTS_DIR):
+  os.makedirs(TRANSCRIBE_RESULTS_DIR)
 
 PRETRAINED_MODELS_DIR = "./pretrained_models"
 
@@ -35,7 +35,7 @@ app = Flask(__name__)
 #app.config["TRANSCRIBED_DATA_DIR"] = TRANSCRIBED_DATA_DIR
 #app.config["MODELS_DIR"] = MODELS_DIR
 #app.config["UNTRANSCRIBED_DATA_DIR"] = UNTRANSCRIBED_DATA_DIR
-#app.config["TRANSCRIBE_RESULT_DIR"] = TRANSCRIBE_RESULT_DIR
+#app.config["TRANSCRIBE_RESULTS_DIR"] = TRANSCRIBE_RESULTS_DIR
 app.secret_key = "secret_key"
 
 #app.config["TRAIN_PREFIX"] = None
@@ -243,7 +243,7 @@ def transcribe():
   safe_restore_model_name = "-".join(restore_model_name.split("/")[1:])
   print("safe_restore_model_name=",safe_restore_model_name)
 
-  result_path = os.path.join(TRANSCRIBE_RESULT_DIR, "__".join((transcribe_prefix, safe_restore_model_name)))
+  result_path = os.path.join(TRANSCRIBE_RESULTS_DIR, "__".join((transcribe_prefix, safe_restore_model_name)))
 
   na_corpus = corpus.ReadyCorpus(os.path.join(UNTRANSCRIBED_DATA_DIR, transcribe_prefix), label_file_path=label_file_path, transcribe_new=True)
   na_reader = corpus_reader.CorpusReader(na_corpus, batch_size=batch_size, transcribe_new=True)
