@@ -19,8 +19,13 @@
 <h1>Click the button to train a new Persephone model</h1>
 
 <form action="/train/" method="post">
-  Dataset name: <input type="text" name="dataset"><br>
-  Number of training instances: <input type="text" name="num_train"><br>
+  Dataset name, Number of training instances: 
+  <select name="dataset_and_num_train">
+    {% for dataset in dataset_list %}
+    <option value= "{{dataset}}" SELECTED>{{dataset}}</option>
+    {% endfor %}
+  </select></br>
+
   Batch size: <input type="text" name="batch_size"><br>
   Minimum number of epochs: <input type="text" name="min_epochs"><br>
   Maximum number of epochs: <input type="text" name="max_epochs"><br>

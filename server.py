@@ -7,6 +7,7 @@ import sys
 import inspect
 import time
 import zipfile
+import shutil
 
 from modules.persephone.persephone import corpus, corpus_reader, rnn_ctc
 
@@ -19,43 +20,26 @@ MODELS_DIR = "./_models"
 if not os.path.exists(MODELS_DIR):
   os.makedirs(MODELS_DIR)
 
+UNTRANSCRIBED_DATA_DIR = "./_untranscribed_data"
+if not os.path.exists(UNTRANSCRIBED_DATA_DIR):
+  os.makedirs(UNTRANSCRIBED_DATA_DIR)
 
-"""
-UPLOAD_DIR = "./_uploads"
-if not os.path.exists(UPLOAD_DIR):
-  os.makedirs(UPLOAD_DIR)
+TRANSCRIBE_RESULT_DIR = "./_transcribe_result"
+if not os.path.exists(TRANSCRIBE_RESULT_DIR):
+  os.makedirs(TRANSCRIBE_RESULT_DIR)
 
-EXP_DIR = "./_exp"
-if not os.path.exists(EXP_DIR):
-  os.makedirs(EXP_DIR)
-"""
-
-
-
-TRANSCRIBE_UPLOAD_DIR = "./_transcribe_uploads"
-if not os.path.exists(TRANSCRIBE_UPLOAD_DIR):
-  os.makedirs(TRANSCRIBE_UPLOAD_DIR)
-
-TRANSCRIBE_DIR = "./_transcribe"
-if not os.path.exists(TRANSCRIBE_DIR):
-  os.makedirs(TRANSCRIBE_DIR)
-
-TRANSCRIBE_EXP_DIR = "./_transcribe_exp"
-if not os.path.exists(TRANSCRIBE_EXP_DIR):
-  os.makedirs(TRANSCRIBE_EXP_DIR)
+PRETRAINED_MODELS_DIR = "./pretrained_models"
 
 
 app = Flask(__name__)
-#app.config["UPLOAD_DIR"] = UPLOAD_DIR
-app.config["TRANSCRIBED_DATA_DIR"] = TRANSCRIBED_DATA_DIR
-#app.config["EXP_DIR"] = EXP_DIR
-app.config["TRANSCRIBE_UPLOAD_DIR"] = TRANSCRIBE_UPLOAD_DIR
-app.config["TRANSCRIBE_DIR"] = TRANSCRIBE_DIR
-app.config["TRANSCRIBE_EXP_DIR"] = TRANSCRIBE_EXP_DIR
+#app.config["TRANSCRIBED_DATA_DIR"] = TRANSCRIBED_DATA_DIR
+#app.config["MODELS_DIR"] = MODELS_DIR
+#app.config["UNTRANSCRIBED_DATA_DIR"] = UNTRANSCRIBED_DATA_DIR
+#app.config["TRANSCRIBE_RESULT_DIR"] = TRANSCRIBE_RESULT_DIR
 app.secret_key = "secret_key"
 
-app.config["TRAIN_PREFIX"] = None
-app.config["TRANSCRIBE_PREFIX"] = None
+#app.config["TRAIN_PREFIX"] = None
+#app.config["TRANSCRIBE_PREFIX"] = None
 
 
 @app.route("/")
@@ -89,7 +73,7 @@ def upload_train():
 
   #file.save(os.path.join(UPLOAD_DIR, secure_filename(file.filename)))
   file.filename = secure_filename(file.filename)
-  print("file.filename =", file.filename)
+  #print("file.filename =", file.filename)
 
   #for f in os.listdir(UPLOAD_DIR):
   #if f.endswith(".zip"):
@@ -97,12 +81,12 @@ def upload_train():
     #zip_ref = zipfile.ZipFile(os.path.join(UPLOAD_DIR, f), "r")
     zip_ref = zipfile.ZipFile(file, "r")
     zip_ref.extractall(TRANSCRIBED_DATA_DIR)
-    app.config["TRAIN_PREFIX"] = file.filename[:-4]
+    train_prefix = file.filename[:-4]
     # Here we only select the first zip file we found
     # In the future, users should be able to select a particular training batch
     #break
 
-  if not app.config["TRAIN_PREFIX"]:
+  if not train_prefix:
     flash("Zip file not found")
     return redirect(request.url)
 
@@ -117,22 +101,30 @@ def upload_train():
   # particular training batch)
 
   # Check if wav and label folders are uploaded
-  if not os.path.exists(os.path.join(TRANSCRIBED_DATA_DIR, app.config["TRAIN_PREFIX"], "wav")):
-    print(os.path.join(TRANSCRIBED_DATA_DIR, app.config["TRAIN_PREFIX"], "wav"))
+  if not os.path.exists(os.path.join(TRANSCRIBED_DATA_DIR, train_prefix, "wav")):
+    print(os.path.join(TRANSCRIBED_DATA_DIR, train_prefix, "wav"))
     flash("You do not have a wav folder")
     return redirect(request.url)
 
-  if not os.path.exists(os.path.join(TRANSCRIBED_DATA_DIR, app.config["TRAIN_PREFIX"], "label")):
+  if not os.path.exists(os.path.join(TRANSCRIBED_DATA_DIR, train_prefix, "label")):
     flash("You do not have a label folder")
     return redirect(request.url)
 
   # TODO: check how many training files were uploaded and if filenames of wav and labels match each other
 
-  num_train = len(os.listdir(os.path.join(TRANSCRIBED_DATA_DIR, app.config["TRAIN_PREFIX"], "wav")))
+  num_train = len(os.listdir(os.path.join(TRANSCRIBED_DATA_DIR, train_prefix, "wav")))
   flash("Successfully added " + str(num_train) + " training files")
   print("Successfully added " + str(num_train) + " training files")
 
-  return redirect(url_for("train"))
+
+  dataset_list = []
+  for dataset_dir in os.listdir(TRANSCRIBED_DATA_DIR):
+    if dataset_dir == "__MACOSX":
+      continue
+    else:
+      dataset_list.append(" ".join((dataset_dir, str(num_train))))
+
+  return render_template("train.html", dataset_list=dataset_list)
 
 
 @app.route("/train/", methods = ["GET", "POST"])
@@ -140,23 +132,26 @@ def train():
   if request.method == "GET":
     return render_template("train.html")
 
-  # TODO: Have users input num_train and batch_size
-  app.config["TRAIN_PREFIX"] = request.form["dataset"]
-  #num_train = len(os.listdir(os.path.join(TRANSCRIBED_DATA_DIR, app.config["TRAIN_PREFIX"], "wav")))
-  num_train = int(request.form["num_train"])
+  dataset_and_num_train = request.form["dataset_and_num_train"].split(" ")
+  train_prefix = dataset_and_num_train[0]
+  num_train = int(dataset_and_num_train[1])
   batch_size = int(request.form["batch_size"])
   min_epochs = int(request.form["min_epochs"])
   max_epochs = int(request.form["max_epochs"])
 
-  model_dir = os.path.join(MODELS_DIR, app.config["TRAIN_PREFIX"])
+  model_dir = os.path.join(MODELS_DIR, train_prefix)
 
-  na_corpus = corpus.ReadyCorpus(os.path.join(TRANSCRIBED_DATA_DIR, app.config["TRAIN_PREFIX"]))
+  na_corpus = corpus.ReadyCorpus(os.path.join(TRANSCRIBED_DATA_DIR, train_prefix))
   na_reader = corpus_reader.CorpusReader(na_corpus, num_train=num_train, batch_size=batch_size)
   model = rnn_ctc.Model(model_dir, na_reader, num_layers=2, hidden_size=250)
   model.train(min_epochs=min_epochs, max_epochs=max_epochs)
 
+  shutil.copyfile(
+    os.path.join(TRANSCRIBED_DATA_DIR, train_prefix, "phoneme_set.txt"),
+    os.path.join(MODELS_DIR, train_prefix, "phoneme_set.txt"))
+
   print("\nTraining completed")
-  flash("Completed training on " + app.config["TRAIN_PREFIX"] + " dataset")
+  flash("Completed training on " + train_prefix + " dataset")
   return render_template("train_complete.html")
 
 
@@ -184,31 +179,50 @@ def upload_transcribe():
   if not file:
     return redirect(request.url)
 
-  file.save(os.path.join(TRANSCRIBE_UPLOAD_DIR, secure_filename(file.filename)))
+  #file.save(os.path.join(TRANSCRIBE_UPLOAD_DIR, secure_filename(file.filename)))
+  file.filename = secure_filename(file.filename)
 
-  for f in os.listdir(TRANSCRIBE_UPLOAD_DIR):
-    if f.endswith(".zip"):
-      zip_ref = zipfile.ZipFile(os.path.join(TRANSCRIBE_UPLOAD_DIR, f), "r")
-      zip_ref.extractall(TRANSCRIBE_DIR)
-      app.config["TRANSCRIBE_PREFIX"] = f[:-4]
-      # Here we only select the first zip file we found
-      # In the future, users should be able to select a particular training batch
-      break
+  if file.filename.endswith(".zip"):
+    #zip_ref = zipfile.ZipFile(os.path.join(UPLOAD_DIR, f), "r")
+    zip_ref = zipfile.ZipFile(file, "r")
+    zip_ref.extractall(UNTRANSCRIBED_DATA_DIR)
+    transcribe_prefix = file.filename[:-4]
 
-  if not app.config["TRANSCRIBE_PREFIX"]:
+  if not transcribe_prefix:
     flash("Zip file not found")
     return redirect(request.url)
 
   # Check if wav and label folders are uploaded
-  if not os.path.exists(os.path.join(TRANSCRIBE_DIR, app.config["TRANSCRIBE_PREFIX"], "wav")):
+  if not os.path.exists(os.path.join(UNTRANSCRIBED_DATA_DIR, transcribe_prefix, "wav")):
     flash("You do not have a wav folder")
     return redirect(request.url)
 
-  num_transcribe = len(os.listdir(os.path.join(TRANSCRIBE_DIR, app.config["TRANSCRIBE_PREFIX"], "wav")))
+  num_transcribe = len(os.listdir(os.path.join(UNTRANSCRIBED_DATA_DIR, transcribe_prefix, "wav")))
   flash("Successfully added " + str(num_transcribe) + " untranscribed files")
   print("Successfully added " + str(num_transcribe) + " untranscribed files")
 
-  return redirect(url_for("transcribe"))
+
+  dataset_list = []
+  for dataset_dir in os.listdir(UNTRANSCRIBED_DATA_DIR):
+    if dataset_dir == "__MACOSX":
+      continue
+    else:
+      dataset_list.append(" ".join((dataset_dir, str(num_transcribe))))
+
+  model_list = []
+  for model in os.listdir(MODELS_DIR):
+    if model == ".DS_Store":
+      continue
+    else:
+      model_list.append(os.path.join(MODELS_DIR, model))
+
+  for model in os.listdir(PRETRAINED_MODELS_DIR):
+    if model == ".DS_Store":
+      continue
+    else:
+      model_list.append(os.path.join(PRETRAINED_MODELS_DIR, model))
+
+  return render_template("transcribe.html", dataset_list=dataset_list, model_list=model_list)
 
 
 @app.route("/transcribe/", methods = ["GET", "POST"])
@@ -216,17 +230,27 @@ def transcribe():
   if request.method == "GET":
     return render_template("transcribe.html")
 
-  # TODO: Have users input num_train and batch_size
-  batch_size = 64   # Hard code for my debugging dataset for now
+  dataset_and_num_transcribe = request.form["dataset_and_num_transcribe"].split(" ")
+  transcribe_prefix = dataset_and_num_transcribe[0]
+  num_transcribe = int(dataset_and_num_transcribe[1])
 
-  label_file_path = "./_train/na_train_tiny/phoneme_set.txt"
+  batch_size = int(request.form["batch_size"])
 
-  na_corpus = corpus.ReadyCorpus(os.path.join(TRANSCRIBE_DIR, app.config["TRANSCRIBE_PREFIX"]), label_file_path=label_file_path, transcribe_new=True)
+  restore_model_name = request.form["model"]
+  restore_model_path = os.path.join(restore_model_name, "model/model_best.ckpt")
+  label_file_path = os.path.join(restore_model_name, "phoneme_set.txt")
+
+  safe_restore_model_name = "-".join(restore_model_name.split("/")[1:])
+  print("safe_restore_model_name=",safe_restore_model_name)
+
+  result_path = os.path.join(TRANSCRIBE_RESULT_DIR, "__".join((transcribe_prefix, safe_restore_model_name)))
+
+  na_corpus = corpus.ReadyCorpus(os.path.join(UNTRANSCRIBED_DATA_DIR, transcribe_prefix), label_file_path=label_file_path, transcribe_new=True)
   na_reader = corpus_reader.CorpusReader(na_corpus, batch_size=batch_size, transcribe_new=True)
-  model = rnn_ctc.Model(TRANSCRIBE_EXP_DIR, na_reader, num_layers=2, hidden_size=250)
-  model.transcribe(restore_model_path="./_exp/model/model_best.ckpt")
+  model = rnn_ctc.Model(result_path, na_reader, num_layers=2, hidden_size=250)
+  model.transcribe(restore_model_path=restore_model_path)
 
-  return send_from_directory(os.path.join(TRANSCRIBE_EXP_DIR, "transcriptions"), "hyps.txt")
+  return send_from_directory(os.path.join(result_path, "transcriptions"), "hyps.txt")
 
 
 if __name__ == "__main__":

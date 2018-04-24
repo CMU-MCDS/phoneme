@@ -18,5 +18,21 @@
 
 <h1>Click the button to transcribe</h1>
 <form action="/transcribe/" method="post">
-    <button name="submit" type="submit">Transcribe</button>
+  Dataset name: 
+  <select name="dataset_and_num_transcribe">
+    {% for dataset in dataset_list %}
+    <option value= "{{dataset}}" SELECTED>{{dataset}}</option>
+    {% endfor %}
+  </select></br>
+
+  Model name: 
+  <select name="model">
+    {% for model in model_list %}
+    <option value= "{{model}}" SELECTED>{{model}}</option>
+    {% endfor %}
+  </select></br>
+
+  Batch size: <input type="text" name="batch_size"><br>
+
+  <button name="submit" type="submit">Transcribe</button>
 </form>
