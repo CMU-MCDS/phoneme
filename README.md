@@ -8,7 +8,7 @@ The `<TargetDir>` can be any name you want to put this git repo in. In this READ
 
 2. Set up the python virtual environment (ideally outside the directory `phoneme`).
 ```
-virtualenv phoneme_env
+virtualenv -p ~/anaconda3/bin/python3 phoneme_env
 source phoneme_env/bin/activate
 pip install -r phoneme/requirements.txt
 ```
