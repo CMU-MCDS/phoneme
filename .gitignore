@@ -14,12 +14,9 @@ gitignore
 
 model_na_example
 
-_uploads
-_train
-_exp
-_transcribe/
-_transcribe_exp/
-_transcribe_uploads/
+_*
 
 log.txt
+
+sample_data/chatino_train_tiny.zip
 
