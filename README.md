@@ -47,3 +47,6 @@ deactivate
 	- TODO: implement functions to check the format of the uploaded data. 
 	- TODO: Consider what kind of files are supported and what if users uploaded multiple files
 	- TODO: add some functions to organize the uploaded data and manage different experiments. (if user uploaded multiple batches of data, the interface needs to allow user select a particular training batch)
+
+
+This system uses Persephone. Please see: https://github.com/oadams/persephone
