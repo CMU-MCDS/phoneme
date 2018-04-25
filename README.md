@@ -49,4 +49,9 @@ deactivate
 	- TODO: add some functions to organize the uploaded data and manage different experiments. (if user uploaded multiple batches of data, the interface needs to allow user select a particular training batch)
 
 
-This system uses Persephone. Please see: https://github.com/oadams/persephone
+# Citation to the resources used
+This system uses Persephone. For its source, please see: https://github.com/oadams/persephone. For its publication, please see:
+
+Oliver Adams, Trevor Cohn, Graham Neubig, Hilaria Cruz, Steven Bird, and Alexis Michaud, Evaluating phonemic transcription of low-resource tonal languages for language documentation, Proceedings of LREC 2018.
+
+The `sample_data` contains subsets of the Na dataset. For its source, please see: http://lacito.vjf.cnrs.fr/pangloss/languages/Na_en.php.
