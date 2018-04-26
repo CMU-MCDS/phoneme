@@ -1,7 +1,6 @@
-<!doctype html>
+{% extends 'base.html' %}
 
-<title>Upload training data</title>
-<meta charset=utf-8>
+{% block content %}
 
 <h1>Upload a training Zip file</h1>
 <form method="post" enctype="multipart/form-data">
@@ -21,3 +20,5 @@
 {% endwith %}
 {% block body %}{% endblock %}
 </body>
+
+{% endblock %}

@@ -45,7 +45,8 @@ if not os.path.exists(TRANSCRIBE_EXP_DIR):
   os.makedirs(TRANSCRIBE_EXP_DIR)
 
 GLOSS_DICT_DIR = "./_glossing_dict/"
-assert(os.path.exists(GLOSS_DICT_DIR))
+if not os.path.exists(GLOSS_DICT_DIR):
+  os.makedirs(GLOSS_DICT_DIR)
 
 app = Flask(__name__)
 #Directories for glossing suggestion algorithm

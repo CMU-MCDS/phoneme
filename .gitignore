@@ -6,6 +6,7 @@
 *.synctex.gz
 *.bbl
 *.blg
+*.swp
 
 doc/phoneme.pdf
 

@@ -1,0 +1,32 @@
+<html>
+<head>
+<link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+
+<div class='page'>
+
+<!-- In case we need Javascript
+<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js" integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js" integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm" crossorigin="anonymous"></script>
+-->
+
+<h2>CMULAB Annotator</h2>
+
+<!-- This could be added for user authentication
+<div>
+    Logged in as: <b>{{ g.user }}</b>
+</div>
+-->
+
+{% for message in get_flashed_messages() %}
+<div class="flash" style="color: red">{{ message }}</div>
+{% endfor %}
+
+{% block content %}{% endblock %}
+
+</div>
+
+</body>
+</html>

@@ -1,22 +1,10 @@
-<!doctype html>
+{% extends 'base.html' %}
 
-<title>Training new glossing model</title>
-<meta charset=utf-8>
-
-<body>
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    <ul class=flashes>
-    {% for message in messages %}
-      <li>{{ message }}</li>
-    {% endfor %}
-    </ul>
-  {% endif %}
-{% endwith %}
-{% block body %}{% endblock %}
-</body>
+{% block content %}
 
 <h1>Click the button to train a new glossing model</h1>
 <form action="/train_glossing/" method="post">
     <button name="submit_gloss" type="submit">Train</button>
 </form>
+
+{% endblock %}

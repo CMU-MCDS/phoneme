@@ -1,7 +1,6 @@
-<!doctype html>
+{% extends 'base.html' %}
 
-<title>Upload training data to train a glossing suggestion model</title>
-<meta charset=utf-8>
+{% block content %}
 
 <h1>Upload training data to train a glossing suggestion model</h1>
 <p>Please submit a zipped file with two files: phoneme.txt and translation.txt</p>
@@ -22,3 +21,5 @@
 {% endwith %}
 {% block body %}{% endblock %}
 </body>
+
+{% endblock %}

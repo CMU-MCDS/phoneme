@@ -1,14 +1,6 @@
-<!doctype html>
+{% extends 'base.html' %}
 
-<!-- <title>Upload testing data</title> -->
-<meta charset=utf-8>
-
-<!-- <h1>Upload a txt file</h1>
-<form method="post" enctype="multipart/form-data">
-  <p><input type="file" name="file">
-     <input type="submit" value="Upload">
-</form>
- -->
+{% block content %}
 
 <h1>Suggested gloss</h1>
 
@@ -16,3 +8,4 @@
                         original: {{ original }} <br/>
                         gloss: {{ gloss }} <br/>
                     {% endfor %}
+{% endblock }

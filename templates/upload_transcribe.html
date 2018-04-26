@@ -1,7 +1,6 @@
-<!doctype html>
-
-<title>Upload untranscribed data</title>
-<meta charset=utf-8>
+{% extends 'base.html' %}
+`
+{% block content %}
 
 <h1>Upload an untranscribed Zip file</h1>
 <form method="post" enctype="multipart/form-data">
@@ -21,3 +20,5 @@
 {% endwith %}
 {% block body %}{% endblock %}
 </body>
+
+{% endblock %}

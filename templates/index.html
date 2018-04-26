@@ -1,7 +1,6 @@
-<!doctype html>
+{% extends 'base.html' %}
 
-<title>Persephone web interface</title>
-<meta charset=utf-8>
+{% block content %}
 
 <p><a href="/upload_train/">Upload files to train</a>
 <p><a href="/upload_transcribe/">Upload files for transcription</a>
@@ -9,3 +8,4 @@
 
 <p><a href="/upload_glossing_train/">Upload files to train a glossing suggestion model</a></p>
 <p><a href="/upload_glossing/"> Upload a txt files to generate glossing </a></p>
+{% endblock %}
