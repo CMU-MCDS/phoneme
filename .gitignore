@@ -8,17 +8,12 @@
 *.blg
 
 doc/phoneme.pdf
-
 data
 gitignore
-
 model_na_example
-
 _*
-
 log.txt
-
 sample_data/chatino_train_tiny.zip
-
 pretrained_models
+exp_*
 
