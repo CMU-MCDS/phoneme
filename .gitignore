@@ -6,25 +6,14 @@
 *.synctex.gz
 *.bbl
 *.blg
-*.swp
 
 doc/phoneme.pdf
-
 data
 gitignore
-
 model_na_example
-
-_uploads
-_train
-_exp
-_transcribe/
-_transcribe_exp/
-_transcribe_uploads/
-_glossing_dict/
-_train_glossing/
-_uploads_glossing
-
-
+_*
 log.txt
+sample_data/chatino_train_tiny.zip
+pretrained_models
+exp_*
 
