@@ -11,3 +11,7 @@ GitPython==2.1.8
 pydub
 pint
 flask==0.12.2
+flask-login
+Flask-Dance[sqla]
+Flask-WTF
+flask-sqlalchemy

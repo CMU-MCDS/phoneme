@@ -17,4 +17,5 @@ sample_data/chatino_train_tiny.zip
 pretrained_models
 exp_*
 glossing_sample_data
+.idea
 

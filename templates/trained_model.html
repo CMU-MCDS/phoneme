@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block content %}
+
+{% if models %}
+    {% for name,discription in models %}
+        <p>Model name: {{ name }}</p>
+        <p>Model Performance: {{ discription }}</p>
+        <br>
+    {% endfor %}
+    {% else %}
+    <p>You haven't trained any model yet!</p>
+    {% endif %}
+
+
+    <a href="/">Go back to interface homepage</a>
+{% endblock %}

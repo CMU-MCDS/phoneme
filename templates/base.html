@@ -1,10 +1,20 @@
 <html>
 <head>
 <link rel="stylesheet" href="/static/style.css">
+    {% block head %}
+    {% endblock %}
 </head>
 <body>
 
 <div class='page'>
+<div class="user_info">
+    {% if current_user.is_authenticated %}
+      Hi {{ current_user.username }}!
+        <a href='/logout/'>Log out</a>
+    {% else %}
+        Please login first!
+    {% endif %}
+</div>
 
 <!-- In case we need Javascript
 <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>

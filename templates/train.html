@@ -1,10 +1,17 @@
 {% extends 'base.html' %}
 
+{% block head %}
+    <script src="/static/transcript.js"></script>
+{% endblock %}
+
 {% block content %}
 
 <h1>Click the button to train a new Persephone model</h1>
 <form action="/train/" method="post">
-    <button name="submit" type="submit">Train</button>
+    <button name="submit" type="submit" onclick="begin()">Train</button>
 </form>
+<br>
+    <div class="tran_status" id="result">
 
-{%endblock}
+    </div>
+{%endblock%}

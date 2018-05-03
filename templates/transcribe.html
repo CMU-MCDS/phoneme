@@ -4,7 +4,19 @@
 
 <h1>Click the button to transcribe</h1>
 <form action="/transcribe/" method="post">
+    {% if models %}
+    <h2>Select a trained model for transcribing</h2>
+    <div class="input-group">
+	    <select name= model_dict>
+            {% for m in models %}
+                <option value= "{{m}}" SELECTED>{{m}}</option>"
+            {% endfor %}
+        </select>
+    </div>
     <button name="submit" type="submit">Transcribe</button>
+    {% else %}
+        <h2>No trained model! Please train a model first then transcribe!</h2>
+        <a href="/">Go back to interface homepage</a>
+    {% endif %}
 </form>
-
 {% endblock %}

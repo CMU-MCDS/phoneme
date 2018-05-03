@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h1 class="title">Welcome to CMULAB Annotator</h1>
+    <form action="/login/" method="post">
+    {{ form.hidden_tag() }}
+    {{ form.csrf_token }}
+    <p>
+        {{ form.username.label }} : {{ form.username(size=32) }}
+        <br>
+        {% for error in form.username.errors %}
+            <span style="color: red;">{{ error }}</span>
+        {% endfor %}
+    </p>
+    <p>
+        {{ form.password.label }} : {{ form.password(size=32) }}
+        <br>
+        {% for error in form.password.errors %}
+            <span style="color: red;">{{ error }}</span>
+        {% endfor %}
+    </p>
+
+    <p>{{ form.remember_me() }} {{ form.remember_me.label }}</p>
+    <p>{{ form.submit() }}</p>
+    </form>
+    <form action="/register/" method="get">
+    <input type="submit" value="Register">
+    </form>
+    <a href="{{ url_for("google.login") }}">Log in via google</a>
+{% endblock %}

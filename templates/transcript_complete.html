@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h1>Transcribing complete!</h1>
+    <p>Transcribing result:</p>
+    {% for r in result %}
+        {{ r }}
+        <br>
+        <br>
+    {% endfor %}
+    <br>
+<a href="/">Go back to interface homepage</a>
+{% endblock %}
