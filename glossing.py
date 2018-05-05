@@ -29,7 +29,10 @@ with open(phrase_table) as f:
 					glossing_dict[phoneme].append((target_word, prob))
 # sort the glossings by probability
 for key, value in glossing_dict.items():
-	glossing_dict[key] = sorted(value, key=lambda x: x[1], reverse=True)
+	my_set = {x[0] for x in value}
+	my_sums = [(i,sum(x[1] for x in value if x[0] == i)) for i in my_set]
+	glossing_dict[key] = sorted(my_sums, key=lambda x: x[1], reverse=True)
+
 
 with open(output_glossing, 'w') as f:
 	f.write(json.dumps(glossing_dict))
