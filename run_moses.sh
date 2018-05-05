@@ -1,6 +1,6 @@
 
 home="/home/chianyuc"
-
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" # current file
 # tokenize
 $home/mosesdecoder/scripts/tokenizer/tokenizer.perl < $1 > $home/corpus/phoneme.tok
 $home/mosesdecoder/scripts/tokenizer/tokenizer.perl < $2 > $home/corpus/translate.tok
@@ -36,4 +36,5 @@ nohup nice $home/mosesdecoder/scripts/training/train-model.perl -root-dir train 
 
 gunzip $home/working/train/model/phrase-table.gz
 python /home/jeanl1/phoneme/glossing.py $home/working/train/model/phrase-table glossing_dict_train.txt
-cp glossing_dict_train.txt /home/jeanl1/phoneme/_glossing_dict/
+echo $DIR
+cp glossing_dict_train.txt $DIR/_glossing_dict/
