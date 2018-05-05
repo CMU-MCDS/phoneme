@@ -594,7 +594,7 @@ def train_glossing():
     user_dir = current_user.username
     train_gloss_dir = os.path.join(TRAIN_DIR_GLOSSING, user_dir)
     phoneme_path=os.path.join(train_gloss_dir,'phoneme.txt')
-    translate_path=os.path.join(train_gloss_dir,'translate.txt')
+    translate_path=os.path.join(train_gloss_dir,'translation.txt')
     cmd = 'bash run_moses.sh {} {}'.format(phoneme_path,translate_path)
     os.system(cmd)
 
