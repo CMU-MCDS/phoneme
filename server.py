@@ -591,8 +591,11 @@ def upload_glossing_train():
 def train_glossing():
     if request.method == "GET":
         return render_template("train_glossing.html")
-
-    cmd = 'bash /home/chianyuc/run_moses.sh phoneme.txt translate.txt'
+    user_dir = current_user.username
+    train_gloss_dir = os.path.join(TRAIN_DIR_GLOSSING, user_dir)
+    phoneme_path=os.path.join(train_gloss_dir,'phoneme.txt')
+    translate_path=os.path.join(train_gloss_dir,'translate.txt')
+    cmd = 'bash run_moses.sh {} {}'.format(phoneme_path,translate_path)
     os.system(cmd)
 
     print("\nTraining completed")
