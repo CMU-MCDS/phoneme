@@ -18,8 +18,7 @@ from flask_dance.consumer.backend.sqla import OAuthConsumerMixin, SQLAlchemyBack
 from flask_dance.consumer import oauth_authorized, oauth_error
 
 """Todo 
-1.drop down list to select menu!
-2. fix multiple file upload:using dict[dict]
+1. run train in back end and click a button to check[]
 """
 
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
