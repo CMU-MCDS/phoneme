@@ -4,9 +4,23 @@
 
 <h1>Transcribing complete!</h1>
     <p>Transcribing result:</p>
-    {% for r in result %}
-        {{ r }}
-        <br>
+    {% for r,f in result %}
+        {% if f %}
+            <form action="/download/" method="get">
+             Tanscript Content: <input type="text" readonly="readonly" name="origin" value="{{ r }}">
+            <input type="submit" value="Download Original Transcripts">
+            <input type="hidden" name="raw" value="{{ result }}">
+            </form>
+            <br>
+            <form action="/download/" method="post">
+            <textarea rows="4" cols="100" name="trans">{{ r }}</textarea>
+            <input type="submit" value="Download This Transcript">
+            <input type="hidden" name="raw" value="{{ result }}">
+            </form>
+            <br>
+        {% else %}
+            {{ r }}
+        {% endif %}
         <br>
     {% endfor %}
     <br>
