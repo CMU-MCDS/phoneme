@@ -740,12 +740,10 @@ def download():
         file_content=request.args.get('origin')
         tmp=ast.literal_eval(request.args.get('raw'))
         print('get method:',file_content)
-        print('get tmp',tmp)
     else:
         file_content = request.values.get('trans')
         tmp=ast.literal_eval(request.values.get('raw'))
         print('post method',file_content)
-        print('post tmp',tmp)
     user_dir = current_user.username
     user_download_dir = os.path.join(USER_DOWNLOAD_DIR, user_dir)
     if not os.path.exists(user_download_dir):
