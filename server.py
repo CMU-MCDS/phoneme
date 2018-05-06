@@ -14,7 +14,7 @@ import time
 import zipfile
 import json
 from flask_dance.contrib.google import make_google_blueprint, google
-#from modules.persephone.persephone import corpus, corpus_reader, rnn_ctc
+from modules.persephone.persephone import corpus, corpus_reader, rnn_ctc
 from flask_dance.consumer.backend.sqla import OAuthConsumerMixin, SQLAlchemyBackend
 from flask_dance.consumer import oauth_authorized, oauth_error
 import ast
