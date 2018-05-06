@@ -16,6 +16,7 @@ from flask_dance.contrib.google import make_google_blueprint, google
 #from modules.persephone.persephone import corpus, corpus_reader, rnn_ctc
 from flask_dance.consumer.backend.sqla import OAuthConsumerMixin, SQLAlchemyBackend
 from flask_dance.consumer import oauth_authorized, oauth_error
+import ast
 
 """Todo 
 1. run train in back end and click a button to check[]
@@ -46,6 +47,10 @@ if not os.path.exists(TRAIN_DIR):
 TRAIN_DIR_GLOSSING = "./_train_glossing"
 if not os.path.exists(TRAIN_DIR_GLOSSING):
     os.makedirs(TRAIN_DIR_GLOSSING)
+
+USER_DOWNLOAD_DIR="./_user_download"
+if not os.path.exists(USER_DOWNLOAD_DIR):
+    os.makedirs(USER_DOWNLOAD_DIR)
 
 EXP_DIR = "./_exp"
 if not os.path.exists(EXP_DIR):
@@ -79,6 +84,8 @@ app.config["EXP_DIR"] = EXP_DIR
 app.config["TRANSCRIBE_UPLOAD_DIR"] = TRANSCRIBE_UPLOAD_DIR
 app.config["TRANSCRIBE_DIR"] = TRANSCRIBE_DIR
 app.config["TRANSCRIBE_EXP_DIR"] = TRANSCRIBE_EXP_DIR
+app.config['USER_DOWNLOAD_DIR']= USER_DOWNLOAD_DIR
+
 app.secret_key = "secret_key"
 
 app.config["TRAIN_PREFIX"] = []
@@ -98,7 +105,7 @@ login_manage.login_view = "login"
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    password = db.Column(db.String(80), unique=True, nullable=False)
+    password = db.Column(db.String(80),  nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     is_traindata_pub = db.Column(db.Boolean, nullable=False, default=False)
     is_untranscript_pub = db.Column(db.Boolean, nullable=False, default=False)
@@ -591,7 +598,6 @@ def train_glossing():
     if request.method == "GET":
         return render_template("train_glossing.html")
     user_dir = current_user.username
-    print('username', user_dir)
     train_gloss_dir = os.path.join(TRAIN_DIR_GLOSSING, user_dir)
     phoneme_path=os.path.join(train_gloss_dir,'phoneme.txt')
     translate_path=os.path.join(train_gloss_dir,'translation.txt')
