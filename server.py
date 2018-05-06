@@ -182,7 +182,7 @@ def google_logged_in(blueprint, token):
 
 # notify on OAuth provider error
 @oauth_error.connect_via(blueprint)
-def github_error(blueprint, error, error_description=None, error_uri=None):
+def google_error(blueprint, error, error_description=None, error_uri=None):
     msg = (
         "OAuth error from {name}! "
         "error={error} description={description} uri={uri}"
@@ -529,9 +529,10 @@ def transcribe():
         i = 1
         for line in f.readlines():
             line = line.strip()
-            if len(line) <= 1:
-                continue
-            results.append('Transcrib file ' + str(i) + " path: " + line)
+            if i%3==1:
+                results.append(('Transcrib file ' + str((i//3)+1) + " path: " + line,False))
+            elif i%3==2:
+                results.append((line,True))
             i += 1
 
     return render_template('transcript_complete.html', result=results)
