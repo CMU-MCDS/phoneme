@@ -733,6 +733,33 @@ def view_trained_model():
     return render_template('trained_model.html',models=model_dict)
     pass
 
+@app.route("/download/", methods=['GET', 'POST'])
+def download():
+    if request.method=='GET':
+        file_content=request.args.get('origin')
+        tmp=ast.literal_eval(request.args.get('raw'))
+        print('get method:',file_content)
+        print('get tmp',tmp)
+    else:
+        file_content = request.values.get('trans')
+        tmp=ast.literal_eval(request.values.get('raw'))
+        print('post method',file_content)
+        print('post tmp',tmp)
+    user_dir = current_user.username
+    user_download_dir = os.path.join(USER_DOWNLOAD_DIR, user_dir)
+    if not os.path.exists(user_download_dir):
+        os.makedirs(user_download_dir)
+    new_filename=str(datetime.now())
+    idx=new_filename.rfind('.')
+    if idx!=-1:
+        new_filename=new_filename[:idx]
+    new_filename+='.txt'
+    with open(os.path.join(user_download_dir,new_filename),'w')as f:
+        f.write(file_content)
+    flash("Transcript download to {}".format(os.path.join(user_download_dir,new_filename)))
+    return render_template('transcript_complete.html',result=tmp)
+    pass
+
 if __name__ == "__main__":
     if "--setup" in sys.argv:
         with app.app_context():
