@@ -2,7 +2,7 @@
 home="/home/chianyuc"
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" # current file
 # tokenize
-user_path=$DIR/_glossing_dict/$3/corpus/
+user_path=$DIR/_glossing_dict/$3/corpus
 echo $1 
 echo $2
 echo $3

@@ -16,6 +16,7 @@ from flask_dance.contrib.google import make_google_blueprint, google
 #from modules.persephone.persephone import corpus, corpus_reader, rnn_ctc
 from flask_dance.consumer.backend.sqla import OAuthConsumerMixin, SQLAlchemyBackend
 from flask_dance.consumer import oauth_authorized, oauth_error
+from collections import defaultdict
 
 """Todo 
 1.drop down list to select menu!
@@ -602,7 +603,7 @@ def train_glossing():
     print("\nTraining completed")
     flash("Completed extracting dictionary")
 
-    return render_template("train_complete.html")
+    return render_template("glossing_train_complete.html")
 
 
 @app.route("/upload_glossing/", methods=['GET', 'POST'])
@@ -698,11 +699,13 @@ def suggest_glossing():
                 try:
                     gloss = gloss_dictionary[phoneme_group]
                 except:
-                    gloss = "NA"
-                output_gloss.append(gloss)
+                    gloss = [["NA","NA"]]
+                output_gloss.append((phoneme_group, gloss))
+               
 
-            output.append([original_sent, output_gloss])
+            output.append(output_gloss)
 
+    #print(type(output))
     return render_template("suggest_glossing.html", gloss_generated=output)
 
 @app.route("/trained_model/", methods=['GET', 'POST'])
