@@ -56,17 +56,23 @@ button:focus{
 		<!-- <div id="{{item}}"></div> -->
 		<div>
 			{%for gloss_pair in item%}
-			{{gloss_pair.0}}: 
-			
-			{%for option in gloss_pair.1%}
-			<input type="checkbox" class="button" id='{{option[0]}}')">{{option[0]}}</input>
+				{{gloss_pair.0}}: 
+				
+				{%for option in gloss_pair.1%}
+					<input type="checkbox" class="{{loop.index}}" id='{{option[0]}}')">{{option[0]}}</input>
+					<input type="text" name=""> </input>
+				{%endfor%}
+				<br>
 			{%endfor%}
-			<input type="text" name=""> </input>
-			<br>
-			{%endfor%}
-			
 		</div>
 		{%endfor%}
+		<script type="text/javascript">				
+			var first = document.getElementsByClassName('1')
+			for (var i = 0; i < first.length; i++) {
+				first[i].checked = true
+			}
+		</script>	
+		
 	</div>
 
 	<div id='bottom'></div>
