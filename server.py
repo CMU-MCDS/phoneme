@@ -9,18 +9,18 @@ import os
 import sys
 from sqlalchemy.orm.exc import NoResultFound
 import inspect
+from datetime import datetime
 import time
 import zipfile
 import json
 from flask_dance.contrib.google import make_google_blueprint, google
-#from modules.persephone.persephone import corpus, corpus_reader, rnn_ctc
+# from modules.persephone.persephone import corpus, corpus_reader, rnn_ctc
 from flask_dance.consumer.backend.sqla import OAuthConsumerMixin, SQLAlchemyBackend
 from flask_dance.consumer import oauth_authorized, oauth_error
-from collections import defaultdict
+import ast
 
 """Todo 
-1.drop down list to select menu!
-2. fix multiple file upload:using dict[dict]
+1. run train in back end and click a button to check[]
 """
 
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
@@ -48,6 +48,10 @@ if not os.path.exists(TRAIN_DIR):
 TRAIN_DIR_GLOSSING = "./_train_glossing"
 if not os.path.exists(TRAIN_DIR_GLOSSING):
     os.makedirs(TRAIN_DIR_GLOSSING)
+
+USER_DOWNLOAD_DIR="./_user_download"
+if not os.path.exists(USER_DOWNLOAD_DIR):
+    os.makedirs(USER_DOWNLOAD_DIR)
 
 EXP_DIR = "./_exp"
 if not os.path.exists(EXP_DIR):
@@ -81,6 +85,8 @@ app.config["EXP_DIR"] = EXP_DIR
 app.config["TRANSCRIBE_UPLOAD_DIR"] = TRANSCRIBE_UPLOAD_DIR
 app.config["TRANSCRIBE_DIR"] = TRANSCRIBE_DIR
 app.config["TRANSCRIBE_EXP_DIR"] = TRANSCRIBE_EXP_DIR
+app.config['USER_DOWNLOAD_DIR']= USER_DOWNLOAD_DIR
+
 app.secret_key = "secret_key"
 
 app.config["TRAIN_PREFIX"] = []
@@ -100,7 +106,7 @@ login_manage.login_view = "login"
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    password = db.Column(db.String(80), unique=True, nullable=False)
+    password = db.Column(db.String(80),  nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     is_traindata_pub = db.Column(db.Boolean, nullable=False, default=False)
     is_untranscript_pub = db.Column(db.Boolean, nullable=False, default=False)
@@ -177,7 +183,7 @@ def google_logged_in(blueprint, token):
 
 # notify on OAuth provider error
 @oauth_error.connect_via(blueprint)
-def github_error(blueprint, error, error_description=None, error_uri=None):
+def google_error(blueprint, error, error_description=None, error_uri=None):
     msg = (
         "OAuth error from {name}! "
         "error={error} description={description} uri={uri}"
@@ -524,9 +530,10 @@ def transcribe():
         i = 1
         for line in f.readlines():
             line = line.strip()
-            if len(line) <= 1:
-                continue
-            results.append('Transcrib file ' + str(i) + " path: " + line)
+            if i%3==1:
+                results.append(('Transcrib file ' + str((i//3)+1) + " path: " + line,False))
+            elif i%3==2:
+                results.append((line,True))
             i += 1
 
     return render_template('transcript_complete.html', result=results)
@@ -593,7 +600,6 @@ def train_glossing():
     if request.method == "GET":
         return render_template("train_glossing.html")
     user_dir = current_user.username
-    print('username', user_dir)
     train_gloss_dir = os.path.join(TRAIN_DIR_GLOSSING, user_dir)
     phoneme_path=os.path.join(train_gloss_dir,'phoneme.txt')
     translate_path=os.path.join(train_gloss_dir,'translation.txt')
@@ -728,6 +734,31 @@ def view_trained_model():
     else:
         model_dict=None
     return render_template('trained_model.html',models=model_dict)
+    pass
+
+@app.route("/download/", methods=['GET', 'POST'])
+def download():
+    if request.method=='GET':
+        file_content=request.args.get('origin')
+        tmp=ast.literal_eval(request.args.get('raw'))
+        print('get method:',file_content)
+    else:
+        file_content = request.values.get('trans')
+        tmp=ast.literal_eval(request.values.get('raw'))
+        print('post method',file_content)
+    user_dir = current_user.username
+    user_download_dir = os.path.join(USER_DOWNLOAD_DIR, user_dir)
+    if not os.path.exists(user_download_dir):
+        os.makedirs(user_download_dir)
+    new_filename=str(datetime.now())
+    idx=new_filename.rfind('.')
+    if idx!=-1:
+        new_filename=new_filename[:idx]
+    new_filename+='.txt'
+    with open(os.path.join(user_download_dir,new_filename),'w')as f:
+        f.write(file_content)
+    flash("Transcript download to {}".format(os.path.join(user_download_dir,new_filename)))
+    return render_template('transcript_complete.html',result=tmp)
     pass
 
 if __name__ == "__main__":
