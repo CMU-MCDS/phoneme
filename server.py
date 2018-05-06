@@ -13,7 +13,7 @@ import time
 import zipfile
 import json
 from flask_dance.contrib.google import make_google_blueprint, google
-from modules.persephone.persephone import corpus, corpus_reader, rnn_ctc
+#from modules.persephone.persephone import corpus, corpus_reader, rnn_ctc
 from flask_dance.consumer.backend.sqla import OAuthConsumerMixin, SQLAlchemyBackend
 from flask_dance.consumer import oauth_authorized, oauth_error
 
@@ -573,7 +573,7 @@ def upload_glossing_train():
             break
 
     # Check if the uploaded zip contains the correct files
-    print(os.path.join(train_gloss_dir, 'phoneme.txt'))
+    #print(os.path.join(train_gloss_dir, 'phoneme.txt'))
     if not os.path.exists(os.path.join(train_gloss_dir, 'phoneme.txt')):
         flash("You do not have a phoneme.txt")
         return redirect(request.url)
@@ -591,10 +591,11 @@ def train_glossing():
     if request.method == "GET":
         return render_template("train_glossing.html")
     user_dir = current_user.username
+    print('username', user_dir)
     train_gloss_dir = os.path.join(TRAIN_DIR_GLOSSING, user_dir)
     phoneme_path=os.path.join(train_gloss_dir,'phoneme.txt')
     translate_path=os.path.join(train_gloss_dir,'translation.txt')
-    cmd = 'bash run_moses.sh {} {}'.format(phoneme_path,translate_path)
+    cmd = 'bash run_moses.sh {} {} {}'.format(phoneme_path,translate_path, user_dir)
     os.system(cmd)
 
     print("\nTraining completed")
@@ -630,7 +631,7 @@ def upload_glossing():
 
     file.save(os.path.join(user_upload_gloss, secure_filename(file.filename)))
 
-    gloss_dir = os.path.join(GLOSS_DICT_DIR, user_dir)
+    gloss_dir = os.path.join(GLOSS_DICT_DIR, user_dir,'working')
     if not os.path.exists(gloss_dir):
         os.makedirs(gloss_dir)
 
@@ -638,7 +639,8 @@ def upload_glossing():
     # Load the trained dictionary to generate glossing: create a dropdown list for user to choose a trained dictionary
     gloss_dictionary_list = []
     for dict_name in os.listdir(gloss_dir):
-        gloss_dictionary_list.append(os.path.join(gloss_dir, dict_name))
+        if dict_name.endswith(".txt"):
+            gloss_dictionary_list.append(os.path.join(gloss_dir, dict_name))
 
     return render_template("upload_glossing.html", gloss_dict=gloss_dictionary_list)
 
@@ -730,4 +732,4 @@ if __name__ == "__main__":
             db.create_all()
             db.session.commit()
             print("Database tables created!")
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=3000)
