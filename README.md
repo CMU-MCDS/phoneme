@@ -55,3 +55,7 @@ This system uses Persephone. For its source, please see: https://github.com/oada
 Oliver Adams, Trevor Cohn, Graham Neubig, Hilaria Cruz, Steven Bird, and Alexis Michaud, Evaluating phonemic transcription of low-resource tonal languages for language documentation, Proceedings of LREC 2018.
 
 The `sample_data` contains subsets of the Na dataset. For its source, please see: http://lacito.vjf.cnrs.fr/pangloss/languages/Na_en.php.
+
+The `sample_data` also contains the Griko dataset. For its source, please see: http://griko.project.uoi.gr/. For its publication, please see:
+
+Lekakou Marika, Valeria Baldissera, and Antonis Anastasopoulos (2013). Documentation and analysis of an endangered language: aspects of the grammar of Griko. University of Ioannina.
