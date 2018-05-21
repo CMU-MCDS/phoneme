@@ -11,5 +11,11 @@ pip install -r requirements.txt
 
 2. Launch the persephone-web-API server:
 ```
-python3 transcription_API_server.py
+python transcription_API_server.py
+```
+
+3. Launch user-interface server:
+```
+cd user_interface
+python ui_server.py
 ```
