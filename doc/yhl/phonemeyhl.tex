@@ -1,0 +1,168 @@
+\documentclass{article}
+
+% if you need to pass options to natbib, use, e.g.:
+% \PassOptionsToPackage{numbers, compress}{natbib}
+% before loading nips_2017
+%
+% to avoid loading the natbib package, add option nonatbib:
+% \usepackage[nonatbib]{nips_2017}
+
+%\usepackage{nips_2017}
+
+% to compile a camera-ready version, add the [final] option, e.g.:
+\usepackage[final]{nips_2017}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+
+\usepackage{amsmath}	% for \begin{align}
+\usepackage{graphicx}	% for \includegraphics{filename}
+\usepackage{subcaption}	% for \begin{subfigure}[t]{0.5\textwidth}
+\usepackage{enumitem}	% for using (a), (b), ...
+\usepackage{courier}	% for \texttt{}
+
+\newcommand{\bb}[1]{\boldsymbol{#1}}
+
+
+\title{Progress Update}
+
+% The \author macro works with any number of authors. There are two
+% commands used to separate the names and addresses of multiple
+% authors: \And and \AND.
+%
+% Using \And between authors leaves it to LaTeX to determine where to
+% break the lines. Using \AND forces a line break at that point. So,
+% if LaTeX puts 3 of 4 authors names on the first line, and the last
+% on the second line, try using \AND instead of \And before the third
+% author name.
+
+\author{
+	Yu-Hsiang Lin
+		%\thanks{Use footnote for providing further information about author (webpage, alternative address)---\emph{not} for acknowledging funding agencies.}%
+		\\
+	Language Technologies Institute\\
+	Carnegie Mellon University\\
+	%\texttt{\{chianyuc, jeanl1, ziruil, yuhsianl, yuyanz1\}@andrew.cmu.edu} \\
+	\texttt{yuhsianl@andrew.cmu.edu} \\
+	%% examples of more authors
+%	\And
+%	Graham Neubig \\
+%	Language Technologies Institute\\
+%	Carnegie Mellon University\\
+%	\texttt{gneubig@cs.cmu.edu} \\
+  %% \AND
+  %% Coauthor \\
+  %% Affiliation \\
+  %% Address \\
+  %% \texttt{email} \\
+  %% \And
+  %% Coauthor \\
+  %% Affiliation \\
+  %% Address \\
+  %% \texttt{email} \\
+  %% \And
+  %% Coauthor \\
+  %% Affiliation \\
+  %% Address \\
+  %% \texttt{email} \\
+}
+
+\begin{document}
+% \nipsfinalcopy is no longer used
+
+\maketitle
+
+
+
+% ---------------------------------------------------------
+% ---------------------------------------------------------
+
+\begin{abstract}
+
+Place holder \cite{Adams2017}.
+
+\end{abstract}
+
+% ---------------------------------------------------------
+% ---------------------------------------------------------
+
+% ---------------------------------------------------------
+
+\section{Question to answer}
+
+How can we create a speech recognition system that transcribes low-resource languages into International Phonetic Alphabets (IPAs) as accurately and quickly as possible?
+
+
+
+% ---------------------------------------------------------
+
+\section{Naive way to proceed}
+
+Based on \cite{Neubig2018}.
+
+\begin{enumerate}
+
+\item Prepare data: $N$ high-resource languages that have transcription from speech to IPAs (or speech $\rightarrow$ language $\rightarrow$ IPA?), and a target low-resource language with limited transcription.
+	
+\item Train a multi-lingual ASR ($N$ high-resource languages $\rightarrow$ IPA) model: CTC objective function $+$ biLSTM.
+
+(Model parameters $=$ LSTM only? Input acoustic representation is engineered. Output phonemic sequence is computed by CTC decoding.)
+
+Can be either warm-start (training data contains target low-resource languages) or cold-start (training data contains only high-resource languages).
+
+\item Given a target low-resource language, incrementally train (fine-tune) the multi-lingual model: 3 possibilities $\Rightarrow$
+
+	\begin{enumerate}
+	
+	\item Train on only the target low-resource language.
+	
+	\item Select a high-resource language (that is used previously in the multi-lingual model training) that is similar to the target low-resource language, and train on their data combined (concatenation for accuracy, or sampling for speed).
+	
+	\item Think of some way to use the untranscribed speech recording (could actually be plenty of them) to help the training on the target low-resource language.
+	
+	(May be an independent topic outside the multi-lingual setting?)
+	
+	\end{enumerate}
+
+\end{enumerate}
+
+
+
+% ---------------------------------------------------------
+
+\section{Other possibilities}
+
+\begin{itemize}
+
+\item Meta learning \cite{Gu2018}: learn a good initialization.
+
+\item Some way to use the untranscribed speech recording to help the training on the target low-resource language (without multi-lingual pre-trained model).
+
+Will the (plenty of) untranscribed data help regularization/generalization?
+
+\end{itemize}
+
+
+
+% ---------------------------------------------------------
+% ---------------------------------------------------------
+
+%\subsubsection*{Acknowledgments}
+
+% Use unnumbered third level headings for the acknowledgments.
+
+
+
+% ----------------------------------------------------
+% ----------------------------------------------------
+
+\bibliographystyle{plain}
+\bibliography{phonemebib}
+
+\end{document}
