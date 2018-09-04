@@ -146,6 +146,12 @@ Can be either warm-start (training data contains target low-resource languages) 
 
 Will the (plenty of) untranscribed data help regularization/generalization?
 
+$\Rightarrow$ An idea: The typical pattern of semi-supervised learning is (similar to EM): Do iterations. Within each iteration we have two stages. First stage: transcribe the untranscribed data using the current model. Second stage: either maximize the expectation of the model of predicting such transcription (EM), or compute the similarity between the unlabeled speech and the labeled speech with the same predicted labels, and penalize the diversity.
+
+Question is: how to update the model (at least in the second way)? How can I use the signal coming from the diversity to update my model?
+
+\item Cotraining? Separate features into two groups and train two ASR models?
+
 \end{itemize}
 
 
