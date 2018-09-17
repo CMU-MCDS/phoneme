@@ -15,7 +15,6 @@ def main():
     with open(filename, 'r') as file:
         for line in file:
             line = strip_punctuation.sub('', line.lower())
-            #words = line.strip().split(delimiter)
             words = line.split(delimiter)
             for w in words:
                 if w != '':
@@ -29,7 +28,7 @@ def main():
     print ('word_count =', word_count)
     print ('ttr =', ttr)
 
-    print ('word_set =', word_set)
+    #print ('word_set =', word_set)
 
 
 if __name__ == '__main__':
