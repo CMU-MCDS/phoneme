@@ -1,5 +1,5 @@
 ## Computer TTR
-To run the ttr.py file, use could use the following command: <br>
+To run the ttr.py file, you could use the following command: <br>
 `python ttr.py [filename] [delimiter] [remove_punctuations]`
 
 For example: <br>
