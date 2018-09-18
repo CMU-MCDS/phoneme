@@ -20,4 +20,9 @@ exp_*
 doc/yhl/phonemeyhl.pdf
 
 sample_data/ted-dev.orig.spa*
+sample_data/ted-dev.mtok.eng*
+sample_data/ted-train.mtok.eng*
+
+ttr/spa_eng.eng.model
+ttr/spa_eng.eng.vocab
 
