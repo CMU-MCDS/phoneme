@@ -11,13 +11,13 @@ def main():
 
     word_count = 0
     word_set = set()
-    strip_punctuation = re.compile('[%s]' % re.escape(strip_punctuation +
-                                                      string.punctuation +
-                                                      '\n'))
+    #strip_punctuation = re.compile('[%s]' % re.escape(strip_punctuation +
+    #                                                  string.punctuation +
+    #                                                  '\n'))
 
     with open(filename, 'r') as file:
         for line in file:
-            line = strip_punctuation.sub('', line.lower())
+            #line = strip_punctuation.sub('', line.lower())
             words = line.split(delimiter)
             for w in words:
                 if w != '':
@@ -31,7 +31,8 @@ def main():
     print ('word_count =', word_count)
     print ('ttr =', ttr)
 
-    #print ('word_set =', word_set)
+    print ('word_set =', word_set)
+    print ('filename = ',filename)
 
 
 if __name__ == '__main__':
