@@ -31,7 +31,7 @@ def main():
     print ('word_count =', word_count)
     print ('ttr =', ttr)
 
-    print ('word_set =', word_set)
+    #print ('word_set =', word_set)
 
 
 if __name__ == '__main__':

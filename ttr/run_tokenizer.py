@@ -5,13 +5,13 @@ import sentencepiece as spm
 
 
 sp = spm.SentencePieceProcessor()
-sp.Load('spa_eng.eng.model')
+sp.Load('spa_eng.spa.model')
 
 token_count = 0
 token_set = set()
 #skip_tokens = set({'<unk>', '<s>', '</s>'})
 
-with open('/Users/yuhsianglin/Dropbox/cmu/phoneme/sample_data/ted-train.mtok.eng') as file:
+with open('/Users/yuhsianglin/Dropbox/cmu/phoneme/sample_data/ted-train.orig.spa') as file:
     #cnt = 0
     for line in file:
         #cnt += 1

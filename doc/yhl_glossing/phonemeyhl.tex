@@ -177,6 +177,54 @@ RuntimeError: Internal: /Users/travis/build/google/sentencepiece/src/trainer\_in
 
 
 
+\clearpage
+
+% ---------------------------------------------------------
+
+\section{Ranking problem}
+
+[Query]
+
+Task language: the (low-resource) source language that we want to translate from. (In our current dataset, the target language is always English)
+
+[Documents]
+
+Candidate auxiliary languages: the (high-resource) source language whose data we are going to add to that of the task language to (1) increase the training data size and/or (2) to regularize overfitting to small task language data.
+
+[Features]
+
+Query features:
+\begin{enumerate}
+\item Task language dataset size
+\item Task language TTR
+\end{enumerate}
+
+Document features:
+\begin{enumerate}
+\item Auxiliary language dataset size
+\item Auxiliary language TTR
+\end{enumerate}
+
+Query-document interaction features:
+\begin{enumerate}
+\item Word-level overlap between task and auxiliary language datasets
+\item Character-level overlap between task and auxiliary language datasets
+\item URIEL distance between task and auxiliary language (dataset independent)
+\item More\dots
+\end{enumerate}
+
+[Rank]
+
+The ranking of the auxiliary languages according to the BLEU scores obtained by training a model using (task language dataset + auxiliary language dataset). Note that the {\bf higher} the rank the better the auxiliary language is.
+
+[Query group]
+
+The data associated with a query consist of multiple data points coming from all the candidate auxiliary languages. Each data point has features of a auxiliary language and its interactions with the task language that defines this query, as well as the rank of this auxiliary language. Such a set of data points is called a query group.
+
+
+
+
+
 
 % ---------------------------------------------------------
 % ---------------------------------------------------------

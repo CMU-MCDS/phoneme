@@ -26,3 +26,7 @@ sample_data/ted-train.mtok.eng*
 ttr/spa_eng.eng.model
 ttr/spa_eng.eng.vocab
 
+sample_data/ted-train.orig.spa
+ttr/spa_eng.spa.model
+ttr/spa_eng.spa.vocab
+
