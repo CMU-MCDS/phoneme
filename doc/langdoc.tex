@@ -1,0 +1,82 @@
+%
+% File acl2018.tex
+%
+%% Based on the style files for ACL-2017, with some changes, which were, in turn,
+%% Based on the style files for ACL-2015, with some improvements
+%%  taken from the NAACL-2016 style
+%% Based on the style files for ACL-2014, which were, in turn,
+%% based on ACL-2013, ACL-2012, ACL-2011, ACL-2010, ACL-IJCNLP-2009,
+%% EACL-2009, IJCNLP-2008...
+%% Based on the style files for EACL 2006 by 
+%%e.agirre@ehu.es or Sergi.Balari@uab.es
+%% and that of ACL 08 by Joakim Nivre and Noah Smith
+
+\documentclass[11pt,a4paper,usenames,dvipsnames]{article}
+\usepackage[hyperref]{acl2018}
+\usepackage{times}
+\usepackage{latexsym}
+
+\usepackage{url}
+
+\usepackage{xcolor}
+
+\aclfinalcopy % Uncomment this line for the final submission
+%\def\aclpaperid{***} %  Enter the acl Paper ID here
+
+%\setlength\titlebox{5cm}
+% You can expand the titlebox if you need extra space
+% to show all the authors. Please do not make the titlebox
+% smaller than 5cm (the original size); we will check this
+% in the camera-ready version and ask you to change it back.
+
+\newcommand\BibTeX{B{\sc ib}\TeX}
+
+\title{Finding the Most Helpful Language to Adapt From for Endangered Languages}
+
+\author{Chian-Yu Chen, Jean Lee, Zirui Li, Yu-Hsiang Lin, Yuyan Zhang, Graham Neubig \\
+  Language Technologies Institute \\
+  Carnegie Mellon University \\
+  {\tt \{chianyuc, jeanl1, ziruil, yuhsianl, yuyanz1\}@andrew.cmu.edu} \\
+  {\tt gneubig@cs.cmu.edu} \\}
+
+\date{}
+
+\begin{document}
+\maketitle
+\begin{abstract}
+{\color{blue}Abstract.}
+\end{abstract}
+
+\section{Introduction}
+
+The common challenge of applying natural language processing (NLP) techniques to documenting the endangered languages is lack of language data. Moreover, among the limited data, there is often only a small portion of it that is annotated. Because the latest NLP technologies such as machine translation or speech recognition usually depends on a large quantity of annotated data, their performance is poor when directly applied to the endangered languages.
+
+It has been shown that by using multi-lingual learning one can leverage one or more similar high-resource languages to improve the performance on the low-resource languages in several NLP tasks. One example is that by combining the training data of one or more high-resource languages with that of the target low-resource language to form a larger training dataset, one can obtain higher BLEU score in machine translation tasks \citep{Neubig2018}. It is therefore compelling to conduct a thorough investigation on the effective way of performing language adaptation in several common NLP tasks.
+
+
+\section{Finding the Most Helpful Language for Adaptation}
+
+The general question is: given a NLP task, a target low-resource language and its dataset, and some high-resource languages and their datasets, how can one find out which auxiliary high-resource language is the most helpful to adapt from, without exhaustively performing the task on all possible choices? To answer this question, we look at a few attributes that may be representative for the language and/or the particular dataset, and try to find the correlation of them to the quality of adaptation. The NLP tasks we consider are machine translation, entity linking, and {\color{blue}[SOME TASK]}.
+
+
+
+
+\section{Experiments}
+
+{\color{blue}Experiments.}
+
+
+\section{Related Works}
+
+{\color{blue}Related Works.}
+
+
+\section{Conclusion}
+
+{\color{blue}Conclusion.}
+
+
+\bibliography{MachineLearning}
+\bibliographystyle{acl_natbib}
+
+\end{document}
