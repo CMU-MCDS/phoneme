@@ -56,9 +56,43 @@ It has been shown that by using multi-lingual learning one can leverage one or m
 
 \section{Finding the Most Helpful Language for Adaptation}
 
-The general question is: given a NLP task, a target low-resource language and its dataset, and some high-resource languages and their datasets, how can one find out which auxiliary high-resource language is the most helpful to adapt from, without exhaustively performing the task on all possible choices? To answer this question, we look at a few attributes that may be representative for the language and/or the particular dataset, and try to find the correlation of them to the quality of adaptation. The NLP tasks we consider are machine translation, entity linking, and {\color{blue}[SOME TASK]}.
+The questions we try to answer are:
 
+\begin{enumerate}
 
+\item Given a NLP task, a target low-resource language and its dataset, and some high-resource languages and their datasets, how can one find out which auxiliary high-resource language is the most helpful to adapt from, without exhaustively performing the task on all possible choices?
+
+\item Does there exist language or dataset features that are common strong indicators across multiple tasks? Or the strong features are highly task-dependent?
+
+\item How does the performance of the method scales as the size of the dataset decreases? Could it be applied to resource-constrained endangered languages?
+
+\end{enumerate}
+
+To answer the first question, we look at a few features that may be representative for the language and/or the particular dataset, and try to find the correlation between them and the quality of adaptation. More precisely, the features we consider include:
+
+\begin{enumerate}
+\item Dataset size
+\item Token-type ratio (TTR) of the dataset
+\item Word-level/character-level overlap {\color{red}ratio} between the target language dataset and auxiliary language dataset
+\item URIEL distance between task and auxiliary language (dataset independent) {\color{blue}(more details\dots)}
+{\color{blue}\item Earth-mover distance}
+\end{enumerate}
+
+\noindent We formulate our problem as: given the dataset of the low-resource task language, and a set of datasets of the high-resource auxiliary languages, predict which auxiliary language would help improving the performance most. There are at least three possible paradigms to address this prediction problem:
+
+\begin{enumerate}
+
+\item Regression: directly predict the task metric score.
+
+\item Ranking: predict the order of the auxiliary language according to how much they improve the performance.
+
+\item Binary classification: only predict which one language will be the most helpful.
+
+\end{enumerate}
+
+To answer the second question, we consider the following common NLP tasks: machine translation, entity linking, and {\color{blue}[SOME TASK]}. In choosing the models, we prefer the ones that are easy to interpret, so that it is easier to tell the relative importance among the features. In this work, we consider decision trees as our models.
+
+To answer the third question, we start with languages that include both low-resource and high-resource languages, and decrease the data size to observe the effect. We use TED dataset that include 54 languages.
 
 
 \section{Experiments}
