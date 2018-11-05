@@ -49,6 +49,8 @@
 
 \section{Introduction}
 
+TODO: Worth citing? \cite{kocmi2018trivial}
+
 The common challenge of applying natural language processing (NLP) techniques to documenting the endangered languages is lack of language data. Moreover, among the limited data, there is often only a small portion of it that is annotated. Because the latest NLP technologies such as machine translation or speech recognition usually depends on a large quantity of annotated data, their performance is poor when directly applied to the endangered languages.
 
 It has been shown that by using multi-lingual learning one can leverage one or more similar high-resource languages to improve the performance on the low-resource languages in several NLP tasks. One example is that by combining the training data of one or more high-resource languages with that of the target low-resource language to form a larger training dataset, one can obtain higher BLEU score in machine translation tasks \citep{Neubig2018}. It is therefore compelling to conduct a thorough investigation on the effective way of performing language adaptation in several common NLP tasks.
@@ -71,10 +73,15 @@ The questions we try to answer are:
 To answer the first question, we look at a few features that may be representative for the language and/or the particular dataset, and try to find the correlation between them and the quality of adaptation. More precisely, the features we consider include:
 
 \begin{enumerate}
-\item Dataset size
-\item Token-type ratio (TTR) of the dataset
-\item Word-level/character-level overlap {\color{red}ratio} between the target language dataset and auxiliary language dataset
-\item URIEL distance between task and auxiliary language (dataset independent) {\color{blue}(more details\dots)}
+\item Dataset size\\
+For each corpus in different languages, we define the dataset size for that language the number of total word tokens in that corpus.
+\item Type-token ratio (TTR) of the dataset\\
+The type-token ratio of a dataset is defined as the ratio of the types (the amount of unique words) to the number of total word tokens \cite{richards87}. It is a measure for lexical diversity, as lower TTR represents lower lexical variation and higher TTR represents the opposite.
+\item Word-level/character-level overlap {\color{red}ratio} between the target language dataset and auxiliary language dataset\\
+For the word-level overlap ratio of the datasets, we count the number of the tokens that appeared to be the same in both target and auxiliary language datasets. As for the character-level overlap ratio of the datasets, it is defined to be the overlapping of the sequence of characters in both target and auxiliary language datasets. For different languages, these sequences of characters are modelled separately.
+\item URIEL distance between task and auxiliary language (dataset independent) \\
+The URIEL typological database \cite{littell17} provides varies kinds of information and features for different languages. Features such as geographical distances between languages, and also vectors such as phylogeny vectors and typological vectors are all provided. We queried multiple kinds of features for each languages from the URIEL knowledge database and took them into consideration. These feature are dataset independent, so it is relatively easier to extract even for low-resource languages.
+
 {\color{blue}\item Earth-mover distance}
 \end{enumerate}
 
