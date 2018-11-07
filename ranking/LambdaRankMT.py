@@ -24,8 +24,9 @@ if __name__ == "__main__":
 
     # Load data for ranking model
     data_file = "data_ranking_mt.csv"
+    lang_set_file = "language_set.txt"
     data = np.loadtxt(os.path.join(root, data_file), dtype=str, delimiter=",")
-    lang_set = np.loadtxt("language_set.txt", dtype=str)
+    lang_set = np.loadtxt(os.path.join(root, lang_set_file), dtype=str)
 
     # Do 44--10 training/test set separation
     TRAIN_LANG_NUM = 44
