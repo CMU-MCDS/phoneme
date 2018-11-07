@@ -41,3 +41,6 @@ ranking/rank.train.langpair.txt
 
 log_*
 
+ranking/NDCG3_datasize.png
+
+
