@@ -55,13 +55,12 @@ if __name__ == "__main__":
         row = data[i]
         task_lang = str(row[0])
         aux_lang = str(row[1])
-        rank = int(row[3])
         BLEU_level = int(row[4])
         rel_exp = lgbm_rel_exp(BLEU_level, REL_EXP_CUTOFF)
 
         features = row[5:]
         feature_dict = {k: v for k, v in enumerate(features)}
-        line_out = [rank]
+        line_out = [str(rel_exp)]
         line_out.extend([str(k) + ":" + str(v) for k, v in feature_dict.items()])
 
         if task_lang in train_lang_set and aux_lang in train_lang_set:
@@ -75,8 +74,8 @@ if __name__ == "__main__":
             if task_lang not in test_query_seq:
                 test_query_seq.append(task_lang)
 
-    rank_train_data.close()
-    rank_test_data.close()
+    rank_train_file.close()
+    rank_test_file.close()
 
     # Generate query group size file for LightGBM
     with open("rank.train.qgsize.txt", "w") as f:
@@ -91,15 +90,15 @@ if __name__ == "__main__":
     X_test, y_test = load_svmlight_file("rank.test.txt")
     qgsize_train = np.loadtxt("rank.train.qgsize.txt")
     qgsize_test = np.loadtxt("rank.test.qgsize.txt")
-    lgbm = lightgbm.LGBMRanker()
-    lgbm.fit(X_train, y_train, group=qgsize_train,
+    model = lightgbm.LGBMRanker()
+    model.fit(X_train, y_train, group=qgsize_train,
              eval_set=[(X_test, y_test)], eval_group=[qgsize_test], eval_at=[1, 2, 3, 10],
              early_stopping_rounds=5, eval_metric="ndcg",
-             verbose=False, callbacks=[lgb.reset_parameter(learning_rate=lambda x: 0.95 ** x * 0.1)])
+             verbose=False, callbacks=[lightgbm.reset_parameter(learning_rate=lambda x: 0.95 ** x * 0.1)])
 
     print("Features:", data[0, 5:])
-    print("Feature importance:", gbm.feature_importances_)
-    print("Average test NDCG@1 =", np.average(lgbm.evals_result_["valid_0"]["ndcg@1"]))
-    print("Average test NDCG@2 =", np.average(lgbm.evals_result_["valid_0"]["ndcg@2"]))
-    print("Average test NDCG@3 =", np.average(lgbm.evals_result_["valid_0"]["ndcg@3"]))
-    print("Average test NDCG@10 =", np.average(lgbm.evals_result_["valid_0"]["ndcg@10"]))
+    print("Feature importance:", model.feature_importances_)
+    print("Average test NDCG@1 =", np.average(model.evals_result_["valid_0"]["ndcg@1"]))
+    print("Average test NDCG@2 =", np.average(model.evals_result_["valid_0"]["ndcg@2"]))
+    print("Average test NDCG@3 =", np.average(model.evals_result_["valid_0"]["ndcg@3"]))
+    print("Average test NDCG@10 =", np.average(model.evals_result_["valid_0"]["ndcg@10"]))

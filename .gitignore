@@ -32,3 +32,8 @@ ttr/spa_eng.spa.vocab
 
 glossing_sample_data
 
+rank.test.qgsize.txt
+rank.test.txt
+rank.train.qgsize.txt
+rank.train.txt
+
