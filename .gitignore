@@ -39,3 +39,5 @@ rank.train.txt
 ranking/rank.test.langpair.txt
 ranking/rank.train.langpair.txt
 
+log_*
+
