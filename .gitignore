@@ -36,4 +36,6 @@ rank.test.qgsize.txt
 rank.test.txt
 rank.train.qgsize.txt
 rank.train.txt
+ranking/rank.test.langpair.txt
+ranking/rank.train.langpair.txt
 
