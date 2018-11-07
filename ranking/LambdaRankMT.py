@@ -61,8 +61,8 @@ if __name__ == "__main__":
 
         features = row[5:]
         feature_dict = {k: v for k, v in enumerate(features)}
-        row_out = [rank]
-        row_out.extend([str(k) + ":" + str(v) for k, v in feature_dict.items()])
+        line_out = [rank]
+        line_out.extend([str(k) + ":" + str(v) for k, v in feature_dict.items()])
 
         if task_lang in train_lang_set and aux_lang in train_lang_set:
             print(" ".join(line_out), file=rank_train_file)
