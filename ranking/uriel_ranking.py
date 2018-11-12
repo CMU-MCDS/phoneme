@@ -25,14 +25,14 @@ def main(*args):
                 writer = csv.writer(output_file)
                 new_head = ['Task lang','rank1 lang','rank2 lang','rank3 lang']
                 writer.writerow(new_head)
-                for lang in lang_set:
+                for lang in sorted(lang_set):
                     task_dict = distance_dict[lang]
                     temp_list = []
                     for key,val in task_dict.items():
                         if lang == key:
                             continue
-                        temp_list.append((val[index],key))
-                    temp_list = sorted(temp_list,reverse=True)[:3]
+                        temp_list.append((float(val[index]),key))
+                    temp_list = sorted(temp_list,key=lambda x:(-x[0],x[1]))[:3]
                     temp_row = [lang]
                     for i in range(len(temp_list)):
                         temp_row.append(temp_list[i][1])
