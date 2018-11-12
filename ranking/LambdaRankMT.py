@@ -6,6 +6,7 @@ from collections import defaultdict
 from sklearn.datasets import load_svmlight_file
 import lightgbm
 import matplotlib.pyplot as plt
+import evaluation
 
 
 # Compute the "relevance exponent" for LightGBM use
@@ -21,10 +22,10 @@ def lgbm_rel_exp(BLEU_level, cutoff):
 
 if __name__ == "__main__":
     # Working directory on clio
-    #root = "/home/yuhsianl/public/phoneme_common_data/data/mt"
+    root = "/home/yuhsianl/public/phoneme_common_data/data/mt"
 
     # Working directory on your local machine
-    root = "/Users/yuhsianglin/Dropbox/cmu/11634A_11632A_capstone/20181029 Jupyter notebook"
+    #root = "/Users/yuhsianglin/Dropbox/cmu/11634A_11632A_capstone/20181029 Jupyter notebook"
 
     # Load data for ranking model
     data_file = "data_ranking_mt.csv"
@@ -35,6 +36,7 @@ if __name__ == "__main__":
     # Do 53--1 training/test set separation
     NDCG_list = []
     test_data_size_list = []
+    my_NDCG_list = []
     for i in range(lang_set.shape[0]):
         test_lang_set = [lang_set[i]]
         train_lang_set = np.concatenate((lang_set[:i], lang_set[i + 1:]), axis=0)
@@ -73,7 +75,10 @@ if __name__ == "__main__":
 
             features = row[5:]
             feature_dict = {k: v for k, v in enumerate(features)}
+
+            # Here we use BLEU_level as our relevance exponent
             line_out = [str(rel_exp)]
+
             line_out.extend([str(k) + ":" + str(v) for k, v in feature_dict.items()])
 
             if task_lang in train_lang_set and aux_lang in train_lang_set:
@@ -160,16 +165,36 @@ if __name__ == "__main__":
 
             print("Top", PRINT_TOP_K, "auxiliary language for '%s'" % task_lang, "are:", aux_lang_list, "with true ranks", true_rank_list)
             print("Task language data size = %d, task languages data size =" % int(task_size), aux_size_list)
-            qg_start_idx += int(qg_size)
+
             print("Using only data size, the top", PRINT_TOP_K, "auxiliary language are:", aux_lang_list_from_size, "with true ranks", true_rank_list_from_size)
+
+            relevance_sorted_lgbm = y_test[qg_start_idx + best_aux_idx]
+
+            print("[DEBUG] y_train =", y_train)
+            print("[DEBUG] y_test =", y_test)
+
+            true_rel_exp = y_test[qg_start_idx:qg_start_idx + int(qg_size)]
+            relevance_sorted_true = -np.sort(-true_rel_exp)
+
+            NDCG = evaluation.ndcg(relevance_sorted_lgbm, PRINT_TOP_K, relevance_sorted_true)
+            print("My calculation of model NDCG@3 =", NDCG)
+            my_NDCG_list.append(NDCG)
+
+            qg_start_idx += int(qg_size)
 
     avg_NDCG = np.average(np.array(NDCG_list))
     std_NDCG = np.std(np.array(NDCG_list))
     print("Average NDCG@3 =", avg_NDCG, "and standard deviation =", std_NDCG)
 
+    my_avg_NDCG = np.average(np.array(my_NDCG_list))
+    my_std_NDCG = np.std(np.array(my_NDCG_list))
+    print("My average NDCG@3 =", my_avg_NDCG, "and standard deviation =", my_std_NDCG)
+
+    """
     plt.plot(test_data_size_list, NDCG_list, "k.")
     plt.xlabel("Task language data size")
     plt.ylabel("Average NDCG@3")
     plt.savefig("./NDCG3_datasize.png")
     plt.clf()
     plt.close()
+    """
