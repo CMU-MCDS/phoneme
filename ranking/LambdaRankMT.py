@@ -25,7 +25,7 @@ if __name__ == "__main__":
     root = "/home/yuhsianl/public/phoneme_common_data/data/mt"
 
     # Working directory on your local machine
-    #root = "/Users/yuhsianglin/Dropbox/cmu/11634A_11632A_capstone/20181029 Jupyter notebook"
+    # root = "/Users/yuhsianglin/Dropbox/cmu/11634A_11632A_capstone/20181029 Jupyter notebook"
 
     # Load data for ranking model
     data_file = "data_ranking_mt.csv"
