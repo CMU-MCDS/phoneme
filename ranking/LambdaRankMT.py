@@ -37,6 +37,7 @@ if __name__ == "__main__":
     NDCG_list = []
     test_data_size_list = []
     my_NDCG_list = []
+    NDCG_size_list = []
     for i in range(lang_set.shape[0]):
         test_lang_set = [lang_set[i]]
         train_lang_set = np.concatenate((lang_set[:i], lang_set[i + 1:]), axis=0)
@@ -180,6 +181,12 @@ if __name__ == "__main__":
             print("My calculation of model NDCG@3 =", NDCG)
             my_NDCG_list.append(NDCG)
 
+            # NDCG, using only data size
+            relevance_sorted_size = y_test[qg_start_idx + best_aux_idx_from_size]
+            NDCG_size = evaluation.ndcg(relevance_sorted_size, PRINT_TOP_K, relevance_sorted_true)
+            print("Using only dataset size, NDCG@3 =", NDCG_size)
+            NDCG_size_list.append(NDCG_size)
+
             qg_start_idx += int(qg_size)
 
     avg_NDCG = np.average(np.array(NDCG_list))
@@ -189,6 +196,10 @@ if __name__ == "__main__":
     my_avg_NDCG = np.average(np.array(my_NDCG_list))
     my_std_NDCG = np.std(np.array(my_NDCG_list))
     print("My average NDCG@3 =", my_avg_NDCG, "and standard deviation =", my_std_NDCG)
+
+    avg_NDCG_size = np.average(np.array(NDCG_size_list))
+    std_NDCG_size = np.std(np.array(NDCG_size_list))
+    print("Using only dataset size, average NDCG@3 =", avg_NDCG_size, "and standard deviation =", std_NDCG_size)
 
     """
     plt.plot(test_data_size_list, NDCG_list, "k.")
