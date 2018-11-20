@@ -23,10 +23,10 @@ def lgbm_rel_exp(BLEU_level, cutoff):
 
 if __name__ == "__main__":
     # Working directory on clio
-    root = "/home/yuhsianl/public/phoneme_common_data/data/mt"
+    # root = "/home/yuhsianl/public/phoneme_common_data/data/mt"
 
     # Working directory on your local machine
-    # root = "/Users/yuhsianglin/Dropbox/cmu/11634A_11632A_capstone/20181029 Jupyter notebook"
+    root = "/Users/yuhsianglin/Dropbox/cmu/11634A_11632A_capstone/20181029 Jupyter notebook"
 
     # Create directory for output
     output_dir = os.path.join(root, "output_mt")
@@ -206,7 +206,7 @@ if __name__ == "__main__":
             best_aux_idx_by_single_feature_lists = [[] for _ in range(len(single_feature_name_list))]
             # Smaller value is better (e.g. distance) => sign = +1
             # Larger value is better (e.g. dataset size) => sign = -1
-            # 0 means we don't really care about this feature; we still do the work (for coding simplicity) but ignore its result
+            # 0 means we ignore this feature (don't compute single-feature result of it)
             sort_sign_list = [0, -1, -1, -1, 0, -1, -1, 1, 1, 1, 1, 1, 1]
             assert(len(sort_sign_list) == len(single_feature_name_list))
 
@@ -214,15 +214,16 @@ if __name__ == "__main__":
             topK_true_rank_by_single_feature_lists = [[] for _ in range(len(single_feature_name_list))]
 
             for single_feature_idx in range(len(single_feature_name_list)):
-                single_feature_value_list = test_lang_pair[qg_start_idx:qg_start_idx + int(qg_size), 3 + single_feature_idx].astype(float)
-                best_aux_idx_by_single_feature_lists[single_feature_idx] = np.argsort(sort_sign_list[single_feature_idx] * single_feature_value_list)
-                for topK_k in range(PRINT_TOP_K):
-                    aux_lang_got = test_lang_pair[qg_start_idx + best_aux_idx_by_single_feature_lists[single_feature_idx][topK_k], 1]
-                    true_rank_got = test_lang_pair[qg_start_idx + best_aux_idx_by_single_feature_lists[single_feature_idx][topK_k], 2]
-                    topK_aux_lang_by_single_feature_lists[single_feature_idx].append(aux_lang_got)
-                    topK_true_rank_by_single_feature_lists[single_feature_idx].append(int(true_rank_got))
+                if sort_sign_list[single_feature_idx] != 0:
+                    single_feature_value_list = test_lang_pair[qg_start_idx:qg_start_idx + int(qg_size), 3 + single_feature_idx].astype(float)
+                    best_aux_idx_by_single_feature_lists[single_feature_idx] = np.argsort(sort_sign_list[single_feature_idx] * single_feature_value_list)
+                    for topK_k in range(PRINT_TOP_K):
+                        aux_lang_got = test_lang_pair[qg_start_idx + best_aux_idx_by_single_feature_lists[single_feature_idx][topK_k], 1]
+                        true_rank_got = test_lang_pair[qg_start_idx + best_aux_idx_by_single_feature_lists[single_feature_idx][topK_k], 2]
+                        topK_aux_lang_by_single_feature_lists[single_feature_idx].append(aux_lang_got)
+                        topK_true_rank_by_single_feature_lists[single_feature_idx].append(int(true_rank_got))
 
-                topK_output_dict[single_feature_name_list[single_feature_idx]] = [topK_aux_lang_by_single_feature_lists[single_feature_idx], topK_true_rank_by_single_feature_lists[single_feature_idx]]
+                    topK_output_dict[single_feature_name_list[single_feature_idx]] = [topK_aux_lang_by_single_feature_lists[single_feature_idx], topK_true_rank_by_single_feature_lists[single_feature_idx]]
 
             with open(os.path.join(output_dir, "topK_" + lang_set[task_lang_idx] + ".json"), "w") as f:
                 json.dump(topK_output_dict, f)
@@ -240,19 +241,25 @@ if __name__ == "__main__":
             NDCG_output_dict["LambdaRank"]["NDCG_list"].append(NDCG)
 
             for single_feature_idx in range(len(single_feature_name_list)):
-                relevance_sorted_single_feature = y_test[qg_start_idx + best_aux_idx_by_single_feature_lists[single_feature_idx]]
-                NDCG_single_feature = evaluation.ndcg(relevance_sorted_single_feature, PRINT_TOP_K, relevance_sorted_true)
-                NDCG_output_dict[single_feature_name_list[single_feature_idx]]["task_lang"].append(lang_set[task_lang_idx])
-                NDCG_output_dict[single_feature_name_list[single_feature_idx]]["NDCG_list"].append(NDCG_single_feature)
+                if sort_sign_list[single_feature_idx] != 0:
+                    relevance_sorted_single_feature = y_test[qg_start_idx + best_aux_idx_by_single_feature_lists[single_feature_idx]]
+                    NDCG_single_feature = evaluation.ndcg(relevance_sorted_single_feature, PRINT_TOP_K, relevance_sorted_true)
+                    NDCG_output_dict[single_feature_name_list[single_feature_idx]]["task_lang"].append(lang_set[task_lang_idx])
+                    NDCG_output_dict[single_feature_name_list[single_feature_idx]]["NDCG_list"].append(NDCG_single_feature)
+                else:
+                    # Remove the un-used feature item placeholder
+                    if single_feature_name_list[single_feature_idx] in NDCG_output_dict:
+                        del NDCG_output_dict[single_feature_name_list[single_feature_idx]]
 
             qg_start_idx += int(qg_size)
 
     # Compute avg/std of NDCG
     NDCG_output_dict["LambdaRank"]["avg"] = np.average(np.array(NDCG_output_dict["LambdaRank"]["NDCG_list"]))
     NDCG_output_dict["LambdaRank"]["std"] = np.std(np.array(NDCG_output_dict["LambdaRank"]["NDCG_list"]))
-    for feature in single_feature_name_list:
-        NDCG_output_dict[feature]["avg"] = np.average(np.array(NDCG_output_dict[feature]["NDCG_list"]))
-        NDCG_output_dict[feature]["std"] = np.std(np.array(NDCG_output_dict[feature]["NDCG_list"]))
+    for single_feature_idx in range(len(single_feature_name_list)):
+        if sort_sign_list[single_feature_idx] != 0:
+            NDCG_output_dict[single_feature_name_list[single_feature_idx]]["avg"] = np.average(np.array(NDCG_output_dict[single_feature_name_list[single_feature_idx]]["NDCG_list"]))
+            NDCG_output_dict[single_feature_name_list[single_feature_idx]]["std"] = np.std(np.array(NDCG_output_dict[single_feature_name_list[single_feature_idx]]["NDCG_list"]))
 
     with open(os.path.join(output_dir, "NDCG.json"), "w") as f:
         json.dump(NDCG_output_dict, f)
