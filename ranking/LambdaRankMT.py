@@ -175,6 +175,9 @@ if __name__ == "__main__":
             task_lang = test_lang_pair[qg_start_idx, 0]
             task_size = test_lang_pair[qg_start_idx, 6]
 
+            true_ranking = test_lang_pair[qg_start_idx:qg_start_idx + int(qg_size), 2].astype(int)
+            true_best_aux_idx = np.argsort(true_ranking)
+
             # Here we assert there are only one task language
             test_data_size_list.append(task_size)
 
@@ -199,6 +202,16 @@ if __name__ == "__main__":
                 topK_aux_lang_list.append(test_lang_pair_row[1])
                 topK_true_rank_list.append(int(test_lang_pair_row[2]))
             topK_output_dict["LambdaRank"] = [topK_aux_lang_list, topK_true_rank_list]
+
+            # Extract true top-K
+            true_topK_aux_lang_list = []
+            true_topK_true_rank_list = []
+            for topK_k in range(PRINT_TOP_K):
+                test_lang_pair_row = test_lang_pair[qg_start_idx + true_best_aux_idx[topK_k]]
+                # The first 3 columns are: task_lang, aux_lang, str(rank)
+                true_topK_aux_lang_list.append(test_lang_pair_row[1])
+                true_topK_true_rank_list.append(int(test_lang_pair_row[2]))
+            topK_output_dict["Truth"] = [true_topK_aux_lang_list, true_topK_true_rank_list]
 
             # Extract top-K results by each single feature
             # single_feature_name_list = ["Aux lang TTR", "Overlap word-level", "Overlap subword-level", "Aux lang dataset size", "TTR difference ratio", "Dataset size ratio", "Task lang dataset size", "GEOGRAPHIC", "GENETIC", "SYNTACTIC", "FEATURAL", "INVENTORY", "PHONOLOGICAL"]
