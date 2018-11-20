@@ -7,6 +7,7 @@ from sklearn.datasets import load_svmlight_file
 import lightgbm
 import matplotlib.pyplot as plt
 import evaluation
+import json
 
 
 # Compute the "relevance exponent" for LightGBM use
@@ -27,6 +28,11 @@ if __name__ == "__main__":
     # Working directory on your local machine
     # root = "/Users/yuhsianglin/Dropbox/cmu/11634A_11632A_capstone/20181029 Jupyter notebook"
 
+    # Create directory for output
+    output_dir = os.path.join(root, "output_mt")
+    if not os.path.isdir(output_dir):
+        os.makedirs(output_dir)
+
     # Load data for ranking model
     data_file = "data_ranking_mt.csv"
     lang_set_file = "language_set.txt"
@@ -36,11 +42,34 @@ if __name__ == "__main__":
     # Do 53--1 training/test set separation
     NDCG_list = []
     test_data_size_list = []
-    my_NDCG_list = []
-    NDCG_size_list = []
-    for i in range(lang_set.shape[0]):
-        test_lang_set = [lang_set[i]]
-        train_lang_set = np.concatenate((lang_set[:i], lang_set[i + 1:]), axis=0)
+
+    # NDCG_output_dict should be:
+    # {
+    #  "LambdaRank":
+    #   {
+    #    "task_lang":  ["task lang 1", "task lang 2", ...],
+    #    "NDCG_list": [NDCG for task lang 1, NDCG for task lang 2, ...],
+    #    "avg":       average NDCG,
+    #    "std":       NDCG standard deviation
+    #   },
+    #  "single feature 1":
+    #   {
+    #    "task_lang":  ["task lang 1", "task lang 2", ...],
+    #    "NDCG_list": [NDCG for task lang 1, NDCG for task lang 2, ...],
+    #    "avg":       average NDCG,
+    #    "std":       NDCG standard deviation
+    #   },
+    #  ...
+    # }
+    NDCG_output_dict = {"LambdaRank": {"task_lang": [], "NDCG_list": [], "avg": -1, "std": -1}}
+
+    single_feature_name_list = ["Aux lang TTR", "Overlap word-level", "Overlap subword-level", "Aux lang dataset size", "TTR difference ratio", "Dataset size ratio", "Task lang dataset size", "GEOGRAPHIC", "GENETIC", "SYNTACTIC", "FEATURAL", "INVENTORY", "PHONOLOGICAL"]
+    for feature in single_feature_name_list:
+        NDCG_output_dict[feature] = {"task_lang": [], "NDCG_list": [], "avg": -1, "std": -1}
+
+    for task_lang_idx in range(lang_set.shape[0]):
+        test_lang_set = [lang_set[task_lang_idx]]
+        train_lang_set = np.concatenate((lang_set[:task_lang_idx], lang_set[task_lang_idx + 1:]), axis=0)
         assert(train_lang_set.shape[0] == 53)
         assert(test_lang_set[0] not in list(train_lang_set))
 
@@ -64,16 +93,16 @@ if __name__ == "__main__":
         # and assign the BLEU levels below cutoff to relevance exponent 0
         REL_EXP_CUTOFF = 44
 
-        for i in range(1, data.shape[0]):
-            row = data[i]
+        for data_row_idx in range(1, data.shape[0]):
+            row = data[data_row_idx]
             task_lang = str(row[0])
             aux_lang = str(row[1])
             rank = int(row[3])
             BLEU_level = int(row[4])
             rel_exp = lgbm_rel_exp(BLEU_level, REL_EXP_CUTOFF)
-            task_data_size = int(row[11])
-            aux_data_size = int(row[8])
 
+            # Features are:
+            # ["Aux lang TTR", "Overlap word-level", "Overlap subword-level", "Aux lang dataset size", "TTR difference ratio", "Dataset size ratio", "Task lang dataset size", "GEOGRAPHIC", "GENETIC", "SYNTACTIC", "FEATURAL", "INVENTORY", "PHONOLOGICAL"]
             features = row[5:]
             feature_dict = {k: v for k, v in enumerate(features)}
 
@@ -84,13 +113,13 @@ if __name__ == "__main__":
 
             if task_lang in train_lang_set and aux_lang in train_lang_set:
                 print(" ".join(line_out), file=rank_train_file)
-                print(",".join([task_lang, aux_lang, str(rank), str(task_data_size), str(aux_data_size)]), file=rank_train_lang_pair_file)
+                print(",".join([task_lang, aux_lang, str(rank)] + list(map(str, features))), file=rank_train_lang_pair_file)
                 train_qg_size[task_lang] += 1
                 if task_lang not in train_query_seq:
                     train_query_seq.append(task_lang)
             elif task_lang in test_lang_set and aux_lang in train_lang_set:
                 print(" ".join(line_out), file=rank_test_file)
-                print(",".join([task_lang, aux_lang, str(rank), str(task_data_size), str(aux_data_size)]), file=rank_test_lang_pair_file)
+                print(",".join([task_lang, aux_lang, str(rank)] + list(map(str, features))), file=rank_test_lang_pair_file)
                 test_qg_size[task_lang] += 1
                 if task_lang not in test_query_seq:
                     test_query_seq.append(task_lang)
@@ -138,68 +167,95 @@ if __name__ == "__main__":
 
         predict_scores = model.predict(X_test)
         qg_start_idx = 0
+        # Here we actually assert there are only one task language
+        assert(len(qgsize_test) == 1)
         for qg_size in qgsize_test:
             qg_scores = predict_scores[qg_start_idx:qg_start_idx + int(qg_size)]
             best_aux_idx = np.argsort(-qg_scores)   # argsort: ascending
             task_lang = test_lang_pair[qg_start_idx, 0]
-            task_size = test_lang_pair[qg_start_idx, 3]
+            task_size = test_lang_pair[qg_start_idx, 6]
 
             # Here we assert there are only one task language
             test_data_size_list.append(task_size)
 
-            aux_lang_list = []
-            true_rank_list = []
-            aux_size_list = []
-            for i in range(PRINT_TOP_K):
-                assert(test_lang_pair[qg_start_idx + best_aux_idx[i], 0] == task_lang)
-                aux_lang_list.append(test_lang_pair[qg_start_idx + best_aux_idx[i], 1])
-                true_rank_list.append(int(test_lang_pair[qg_start_idx + best_aux_idx[i], 2]))
-                aux_size_list.append(test_lang_pair[qg_start_idx + best_aux_idx[i], 4])
+            # topK_output_dict should be:
+            # {
+            #  "task_lang": task lang,
+            #  "LambdaRank": [[top 1 aux lang, top 2 aux lang, top 3 aux lang], [true rank 1, true rank 2, true rank 3]],
+            #  "single feature 1": [[top 1 aux lang, top 2 aux lang, top 3 aux lang], [true rank 1, true rank 2, true rank 3]],
+            #  "single feature 2": [[top 1 aux lang, top 2 aux lang, top 3 aux lang], [true rank 1, true rank 2, true rank 3]],
+            #  ...
+            # }
+            # We will save it as an json file
+            topK_output_dict = {"task_lang": lang_set[task_lang_idx]}
 
-            test_aux_size_list = test_lang_pair[qg_start_idx:qg_start_idx + int(qg_size), 4].astype(int)
-            best_aux_idx_from_size = np.argsort(-test_aux_size_list)
-            aux_lang_list_from_size = []
-            true_rank_list_from_size = []
-            for i in range(PRINT_TOP_K):
-                aux_lang_list_from_size.append(test_lang_pair[qg_start_idx + best_aux_idx_from_size[i], 1])
-                true_rank_list_from_size.append(int(test_lang_pair[qg_start_idx + best_aux_idx_from_size[i], 2]))
+            # Extract top-K results
+            topK_aux_lang_list = []
+            topK_true_rank_list = []
+            for topK_k in range(PRINT_TOP_K):
+                test_lang_pair_row = test_lang_pair[qg_start_idx + best_aux_idx[topK_k]]
+                # The first 3 columns are: task_lang, aux_lang, str(rank)
+                assert(test_lang_pair_row[0] == task_lang)
+                topK_aux_lang_list.append(test_lang_pair_row[1])
+                topK_true_rank_list.append(int(test_lang_pair_row[2]))
+            topK_output_dict["LambdaRank"] = [topK_aux_lang_list, topK_true_rank_list]
 
-            print("Top", PRINT_TOP_K, "auxiliary language for '%s'" % task_lang, "are:", aux_lang_list, "with true ranks", true_rank_list)
-            print("Task language data size = %d, task languages data size =" % int(task_size), aux_size_list)
+            # Extract top-K results by each single feature
+            # single_feature_name_list = ["Aux lang TTR", "Overlap word-level", "Overlap subword-level", "Aux lang dataset size", "TTR difference ratio", "Dataset size ratio", "Task lang dataset size", "GEOGRAPHIC", "GENETIC", "SYNTACTIC", "FEATURAL", "INVENTORY", "PHONOLOGICAL"]
 
-            print("Using only data size, the top", PRINT_TOP_K, "auxiliary language are:", aux_lang_list_from_size, "with true ranks", true_rank_list_from_size)
+            best_aux_idx_by_single_feature_lists = [[] for _ in range(len(single_feature_name_list))]
+            # Smaller value is better (e.g. distance) => sign = +1
+            # Larger value is better (e.g. dataset size) => sign = -1
+            # 0 means we don't really care about this feature; we still do the work (for coding simplicity) but ignore its result
+            sort_sign_list = [0, -1, -1, -1, 0, -1, -1, 1, 1, 1, 1, 1, 1]
+            assert(len(sort_sign_list) == len(single_feature_name_list))
 
-            relevance_sorted_lgbm = y_test[qg_start_idx + best_aux_idx]
+            topK_aux_lang_by_single_feature_lists = [[] for _ in range(len(single_feature_name_list))]
+            topK_true_rank_by_single_feature_lists = [[] for _ in range(len(single_feature_name_list))]
 
+            for single_feature_idx in range(len(single_feature_name_list)):
+                single_feature_value_list = test_lang_pair[qg_start_idx:qg_start_idx + int(qg_size), 3 + single_feature_idx].astype(float)
+                best_aux_idx_by_single_feature_lists[single_feature_idx] = np.argsort(sort_sign_list[single_feature_idx] * single_feature_value_list)
+                for topK_k in range(PRINT_TOP_K):
+                    aux_lang_got = test_lang_pair[qg_start_idx + best_aux_idx_by_single_feature_lists[single_feature_idx][topK_k], 1]
+                    true_rank_got = test_lang_pair[qg_start_idx + best_aux_idx_by_single_feature_lists[single_feature_idx][topK_k], 2]
+                    topK_aux_lang_by_single_feature_lists[single_feature_idx].append(aux_lang_got)
+                    topK_true_rank_by_single_feature_lists[single_feature_idx].append(int(true_rank_got))
+
+                topK_output_dict[single_feature_name_list[single_feature_idx]] = [topK_aux_lang_by_single_feature_lists[single_feature_idx], topK_true_rank_by_single_feature_lists[single_feature_idx]]
+
+            with open(os.path.join(output_dir, "topK_" + lang_set[task_lang_idx] + ".json"), "w") as f:
+                json.dump(topK_output_dict, f)
+
+            # Compute NDCG
             print("[DEBUG] y_train =", y_train)
             print("[DEBUG] y_test =", y_test)
 
             true_rel_exp = y_test[qg_start_idx:qg_start_idx + int(qg_size)]
             relevance_sorted_true = -np.sort(-true_rel_exp)
 
+            relevance_sorted_lgbm = y_test[qg_start_idx + best_aux_idx]
             NDCG = evaluation.ndcg(relevance_sorted_lgbm, PRINT_TOP_K, relevance_sorted_true)
-            print("My calculation of model NDCG@3 =", NDCG)
-            my_NDCG_list.append(NDCG)
+            NDCG_output_dict["LambdaRank"]["task_lang"].append(lang_set[task_lang_idx])
+            NDCG_output_dict["LambdaRank"]["NDCG_list"].append(NDCG)
 
-            # NDCG, using only data size
-            relevance_sorted_size = y_test[qg_start_idx + best_aux_idx_from_size]
-            NDCG_size = evaluation.ndcg(relevance_sorted_size, PRINT_TOP_K, relevance_sorted_true)
-            print("Using only dataset size, NDCG@3 =", NDCG_size)
-            NDCG_size_list.append(NDCG_size)
+            for single_feature_idx in range(len(single_feature_name_list)):
+                relevance_sorted_single_feature = y_test[qg_start_idx + best_aux_idx_by_single_feature_lists[single_feature_idx]]
+                NDCG_single_feature = evaluation.ndcg(relevance_sorted_single_feature, PRINT_TOP_K, relevance_sorted_true)
+                NDCG_output_dict[single_feature_name_list[single_feature_idx]]["task_lang"].append(lang_set[task_lang_idx])
+                NDCG_output_dict[single_feature_name_list[single_feature_idx]]["NDCG_list"].append(NDCG_single_feature)
 
             qg_start_idx += int(qg_size)
 
-    avg_NDCG = np.average(np.array(NDCG_list))
-    std_NDCG = np.std(np.array(NDCG_list))
-    print("Average NDCG@3 =", avg_NDCG, "and standard deviation =", std_NDCG)
+    # Compute avg/std of NDCG
+    NDCG_output_dict["LambdaRank"]["avg"] = np.average(np.array(NDCG_output_dict["LambdaRank"]["NDCG_list"]))
+    NDCG_output_dict["LambdaRank"]["std"] = np.std(np.array(NDCG_output_dict["LambdaRank"]["NDCG_list"]))
+    for feature in single_feature_name_list:
+        NDCG_output_dict[feature]["avg"] = np.average(np.array(NDCG_output_dict[feature]["NDCG_list"]))
+        NDCG_output_dict[feature]["std"] = np.std(np.array(NDCG_output_dict[feature]["NDCG_list"]))
 
-    my_avg_NDCG = np.average(np.array(my_NDCG_list))
-    my_std_NDCG = np.std(np.array(my_NDCG_list))
-    print("My average NDCG@3 =", my_avg_NDCG, "and standard deviation =", my_std_NDCG)
-
-    avg_NDCG_size = np.average(np.array(NDCG_size_list))
-    std_NDCG_size = np.std(np.array(NDCG_size_list))
-    print("Using only dataset size, average NDCG@3 =", avg_NDCG_size, "and standard deviation =", std_NDCG_size)
+    with open(os.path.join(output_dir, "NDCG.json"), "w") as f:
+        json.dump(NDCG_output_dict, f)
 
     """
     plt.plot(test_data_size_list, NDCG_list, "k.")
