@@ -104,12 +104,11 @@ if __name__ == "__main__":
             # Features are:
             # ["Aux lang TTR", "Overlap word-level", "Overlap subword-level", "Aux lang dataset size", "TTR difference ratio", "Dataset size ratio", "Task lang dataset size", "GEOGRAPHIC", "GENETIC", "SYNTACTIC", "FEATURAL", "INVENTORY", "PHONOLOGICAL"]
             features = row[5:]
-            feature_dict = {k: v for k, v in enumerate(features)}
 
             # Here we use BLEU_level as our relevance exponent
             line_out = [str(rel_exp)]
 
-            line_out.extend([str(k) + ":" + str(v) for k, v in feature_dict.items()])
+            line_out.extend([str(k) + ":" + str(v) for k, v in enumerate(features)])
 
             if task_lang in train_lang_set and aux_lang in train_lang_set:
                 print(" ".join(line_out), file=rank_train_file)
@@ -148,6 +147,7 @@ if __name__ == "__main__":
         model.fit(X_train, y_train, group=qgsize_train,
                   eval_set=[(X_test, y_test)], eval_group=[qgsize_test], eval_at=3,
                   early_stopping_rounds=40, eval_metric="ndcg", verbose=False)
+        model.booster_.save_model(os.path.join(output_dir, "lgbm_model_mt_" + lang_set[task_lang_idx] + ".txt"))
 
         print("================================")
         print("Features:", data[0, 5:])
