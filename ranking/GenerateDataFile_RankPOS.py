@@ -8,48 +8,76 @@ from scipy.stats import rankdata
 from sklearn.preprocessing import normalize
 from collections import Counter
 from collections import defaultdict
+import re
 
+def get_lan_code(label):
+    return label.split("(")[0]
+
+def convert(code):
+    if code in iso_mapping_dict:
+        return iso_mapping_dict[code]
+    elif len(code) != 3:
+        print(code + ' not in the mapping')
+        assert(False)
+    return code
 
 if __name__ == "__main__":
     # Working directory on clio
     root = "/home/yuhsianl/public/phoneme_common_data/data/pos"
 
-    # Working directory on your local machine
-    # root = "/Users/yuhsianglin/Dropbox/cmu/11634A_11632A_capstone/20181029 Jupyter notebook"
-
+    # Conversion mapping between ISO 639 1 and 3
+    iso_mapping_file = 'ISO_639_1_TO_3.txt'
+    iso_mapping_dict = dict()
+    for pair in np.loadtxt(os.path.join(root, iso_mapping_file), dtype=str, delimiter="\n"):
+        pair = pair.split(":")
+        iso_mapping_dict[pair[0]] = pair[1]
 
     ### Load baseline experiment result: Get ranking ###
     # mt.csv is Prof. Neubig's MT experiment results
-    baseline = pd.read_csv(os.path.join(root, "POS_tagging.csv"))
-    baseline = baseline.set_index("v pivot v \ test >>")
+    baseline = pd.read_csv(os.path.join(root, "pos_baseline.csv"))
+    baseline = baseline.set_index(baseline.columns[0])
 
-    lang_set = baseline.columns.values
-    lang_num = 71
-    lang_set = lang_set[:lang_num]
+    # Task language set and auxiliary language set for the entity linking experiment
+    task_lang_set = baseline.columns.values
+    aux_lang_set = baseline.index.values
 
-    with open(os.path.join(root, "language_set.txt"), "w") as f:
-        for lan in lang_set:
-            print(lan, file=f)
+    with open(os.path.join(root, "task_language_set.txt"), "w") as f:
+        for lan in task_lang_set:
+            lan_ = lan.split("(")
+            datasize = int(lan_[1][:-1])
+            if(datasize < 1400):
+                print(lan, file=f)
 
-    table = [["Task lang", "Aux lang", "BLEU"]]
+    with open(os.path.join(root, "aux_language_set.txt"), "w") as f:
+        for lan in aux_lang_set:
+            lan_ = lan.split("(")
+            datasize = int(lan_[1][:-1])
+            if(datasize > 0):
+                print(lan, file=f)
+
+
+    table = [["Task lang", "Aux lang", "Accuracy"]]
     rank = ["Rank"]
-    BLEU_level = ["BLEU level"]
+    Accuracy_level = ["Accuracy level"]
 
-    for lan_task in lang_set:
+    task_lang_set = np.loadtxt(os.path.join(root, "task_language_set.txt"), dtype=str, delimiter="\n")
+    aux_lang_set = np.loadtxt(os.path.join(root, "aux_language_set.txt"), dtype=str, delimiter="\n")
+
+    for lan_task in task_lang_set:
         rank_score = []
-        for lan_aux in lang_set:
-            if lan_task == lan_aux or baseline.loc[lan_aux, lan_task] == 'X' or len(baseline.loc[lan_aux, lan_task].strip()) == 0:
+        for lan_aux in aux_lang_set:
+            if lan_task == lan_aux or baseline.loc[lan_aux, lan_task] == '' or type(baseline.loc[lan_aux, lan_task]) != np.float64:
                 continue
-            table.append([str(lan_task), str(lan_aux), float(baseline.loc[lan_aux, lan_task])])
+            table.append([get_lan_code(str(lan_task)),get_lan_code(str(lan_aux)), float(baseline.loc[lan_aux, lan_task])])
             # Note: use negative BLEU score here
             # scipy.stats.rankdata() gives rank [1, 2, 3, ...] to negative BLEU scores [-0.3, -0.2, -0.1],
             # so higher BLEU score is put in the front (small "rank" integer value) of the ranking result
             rank_score.append(-float(baseline.loc[lan_aux, lan_task]))
 
         rank.extend(rankdata(rank_score, 'min'))
-        BLEU_level.extend(rankdata(list(-np.array(rank_score)), 'min'))
+        Accuracy_level.extend(rankdata(list(-np.array(rank_score)), 'min'))
 
-    table = np.column_stack((np.array(table), np.array(rank), np.array(BLEU_level)))
+    table = np.column_stack((np.array(table), np.array(rank), np.array(Accuracy_level)))
 
     #####################
 
@@ -66,23 +94,24 @@ if __name__ == "__main__":
     datasize_table = datasize_table.set_index("Language")
 
     # URIEL distance
-    distance_root = "/home/yuhsianl/public/phoneme_common_data/data/uriel_v0_2/distances"
+    distance_root = "/home/yuhsianl/public/phoneme_common_data/data/uriel_v0_2/distances/"
     distance_category = [fname.split(".")[0] for fname in os.listdir(distance_root) if fname.split(".")[1] == "csv"]
     distance_tables = []
 
     for category in distance_category:
+        print(category)
         dist = pd.read_csv(os.path.join(distance_root, category + ".csv"))
         dist = dist.set_index("G_CODE")
-        dist_sub = dist[dist.columns.intersection(lang_set)]
-        dist_sub = dist_sub[dist_sub.index.isin(lang_set)]
-        distance_tables.append(dist_sub)
+        distance_tables.append(dist)
 
     #####################
 
     extracted_type = [["Aux lang TTR", "Overlap word-level", "Aux lang dataset size", "TTR difference ratio", "Dataset size ratio", "Task lang dataset size"] + distance_category]
-
+    
     for i in range(1, table.shape[0]):
         lan_task, lan_aux, _, _, _ = table[i]
+        lan_task = get_lan_code(lan_task)
+        lan_aux = get_lan_code(lan_aux)
         ttr = ttr_table.loc[lan_aux].values[0]
         overlap_word = overlap_word_table.loc[lan_aux, lan_task] / overlap_word_table.loc[lan_task, lan_task]
         datasize = datasize_table.loc[lan_aux].values[0]
@@ -90,13 +119,13 @@ if __name__ == "__main__":
         ttr_diff = (ttr - ttr_target) / ttr_target
         datasize_target = datasize_table.loc[lan_task].values[0]
         datasize_ratio = datasize / datasize_target
-        distance_list = [dtable.loc[lan_aux, lan_task] for dtable in distance_tables]
+        distance_list = [dtable.loc[convert(lan_aux), convert(lan_task)] for dtable in distance_tables]
 
         extracted_type.append([ttr, overlap_word, datasize, ttr_diff, datasize_ratio, datasize_target] + distance_list)
 
     table = np.column_stack((table, np.array(extracted_type)))
 
     # Write out raw dataset for ranking
-    with open(os.path.join(root, "data_ranking_mt.csv"), "w") as f:
+    with open(os.path.join(root, "data_ranking_pos.csv"), "w") as f:
         for row in table:
             print(",".join(row), file=f)
