@@ -9,113 +9,94 @@ from sklearn.preprocessing import normalize
 from collections import Counter
 from collections import defaultdict
 
-# Working directory on clio
-root = "/home/yuhsianl/public/phoneme_common_data/data/el/"
-
-# Conversion mapping between ISO 639 1 and 3
-iso_mapping_file = 'ISO_639_1_TO_3.txt'
-iso_mapping_dict = dict()
-for pair in np.loadtxt(os.path.join(root, iso_mapping_file), dtype=str, delimiter="\n"):
-    pair = pair.split(":")
-    iso_mapping_dict[pair[0]] = pair[1]
-
-
-def convert(code):
-    if code in iso_mapping_dict:
-        return iso_mapping_dict[code]
-    return code
-
 
 if __name__ == "__main__":
+    # Working directory on clio
+    root = "/home/yuhsianl/public/phoneme_common_data/data/pos"
+
+    # Working directory on your local machine
+    # root = "/Users/yuhsianglin/Dropbox/cmu/11634A_11632A_capstone/20181029 Jupyter notebook"
+
+
     ### Load baseline experiment result: Get ranking ###
-    # EL_PanPhon.csv is Shruti's Panphon Entity Linking experiment results
+    # mt.csv is Prof. Neubig's MT experiment results
     baseline = pd.read_csv(os.path.join(root, "POS_tagging.csv"))
     baseline = baseline.set_index("v pivot v \ test >>")
 
-    # Task language set and auxiliary language set for the entity linking experiment
-    task_lang_set = baseline.columns.values
-    aux_lang_set = baseline.index.values
+    lang_set = baseline.columns.values
+    lang_num = 71
+    lang_set = lang_set[:lang_num]
 
-    with open(os.path.join(root, "task_language_set.txt"), "w") as f:
-        for lan in task_lang_set:
+    with open(os.path.join(root, "language_set.txt"), "w") as f:
+        for lan in lang_set:
             print(lan, file=f)
 
-    with open(os.path.join(root, "aux_language_set.txt"), "w") as f:
-        for lan in aux_lang_set:
-            print(lan, file=f)
-
-    # Format the data table
-    table = [["Task lang", "Aux lang", "Accuracy"]]
+    table = [["Task lang", "Aux lang", "BLEU"]]
     rank = ["Rank"]
-    accuracy_level = ["Accuracy level"]
+    BLEU_level = ["BLEU level"]
 
-    # for lan_task in task_lang_set:
-    #     rank_score = []
-    #     for lan_aux in aux_lang_set:
-    #         if lan_task == lan_aux or baseline.loc[lan_aux, lan_task] == 'xxx':
-    #             continue
-    #         table.append([str(lan_task), str(lan_aux), float(baseline.loc[lan_aux, lan_task])])
-    #         # Note: use negative Accuracy score here
-    #         # scipy.stats.rankdata() gives rank [1, 2, 3, ...] to negative Accuracy scores [-0.3, -0.2, -0.1],
-    #         # so higher Accuracy score is put in the front (small "rank" integer value) of the ranking result
-    #         rank_score.append(-float(baseline.loc[lan_aux, lan_task]))
-    #
-    #     rank.extend(rankdata(rank_score, 'min'))
-    #     accuracy_level.extend(rankdata(list(-np.array(rank_score)), 'min'))
-
-    for lan_task in task_lang_set:
+    for lan_task in lang_set:
         rank_score = []
-        for lan_aux in aux_lang_set:
-            if baseline.loc[lan_aux, lan_task] == 'xxx' or len(baseline.loc[lan_aux, lan_task].strip()) == 0:
+        for lan_aux in lang_set:
+            if lan_task == lan_aux or baseline.loc[lan_aux, lan_task] == 'X' or len(baseline.loc[lan_aux, lan_task].strip()) == 0:
                 continue
             table.append([str(lan_task), str(lan_aux), float(baseline.loc[lan_aux, lan_task])])
-            # Note: use negative Accuracy score here
-            # scipy.stats.rankdata() gives rank [1, 2, 3, ...] to negative Accuracy scores [-0.3, -0.2, -0.1],
-            # so higher Accuracy score is put in the front (small "rank" integer value) of the ranking result
+            # Note: use negative BLEU score here
+            # scipy.stats.rankdata() gives rank [1, 2, 3, ...] to negative BLEU scores [-0.3, -0.2, -0.1],
+            # so higher BLEU score is put in the front (small "rank" integer value) of the ranking result
             rank_score.append(-float(baseline.loc[lan_aux, lan_task]))
 
         rank.extend(rankdata(rank_score, 'min'))
-        accuracy_level.extend(rankdata(list(-np.array(rank_score)), 'min'))
+        BLEU_level.extend(rankdata(list(-np.array(rank_score)), 'min'))
 
-    table = np.column_stack((np.array(table), np.array(rank), np.array(accuracy_level)))
+    table = np.column_stack((np.array(table), np.array(rank), np.array(BLEU_level)))
 
     #####################
-    # entity_match.csv is our feature spreadsheet of the counts of overlapping entity between two languages
+
+    # mt_ttr, mt_overlap_word.csv, mt_overlap_subword.csv, mt_datasize.csv
+    # are the sheets in our feature spreadsheet.
     extracted_root = root
-    entity_match_table = pd.read_csv(os.path.join(extracted_root, "entity_match.csv"))
-    entity_match_table = entity_match_table.set_index("lang")
+    ttr_table = pd.read_csv(os.path.join(extracted_root, "ttr_pos.csv"))
+    ttr_table = ttr_table.set_index("lang")
+
+    overlap_word_table = pd.read_csv(os.path.join(extracted_root, "overlap_pos.csv"))
+    overlap_word_table = overlap_word_table.set_index("lang")
+
+    datasize_table = pd.read_csv(os.path.join(extracted_root, "datasize_pos.csv"))
+    datasize_table = datasize_table.set_index("Language")
 
     # URIEL distance
-    distance_root = "/home/yuhsianl/public/phoneme_common_data/data/uriel_v0_2/distances/"
+    distance_root = "/home/yuhsianl/public/phoneme_common_data/data/uriel_v0_2/distances"
     distance_category = [fname.split(".")[0] for fname in os.listdir(distance_root) if fname.split(".")[1] == "csv"]
     distance_tables = []
 
     for category in distance_category:
-        print(category)
         dist = pd.read_csv(os.path.join(distance_root, category + ".csv"))
         dist = dist.set_index("G_CODE")
-        distance_tables.append(dist)
+        dist_sub = dist[dist.columns.intersection(lang_set)]
+        dist_sub = dist_sub[dist_sub.index.isin(lang_set)]
+        distance_tables.append(dist_sub)
 
     #####################
 
-    extracted_type = [["Count entity_match", "Aux lang dataset size", "Task lang dataset size",
-                       "Dataset size ratio"] + distance_category]
+    extracted_type = [["Aux lang TTR", "Overlap word-level", "Aux lang dataset size", "TTR difference ratio", "Dataset size ratio", "Task lang dataset size"] + distance_category]
 
     for i in range(1, table.shape[0]):
         lan_task, lan_aux, _, _, _ = table[i]
+        ttr = ttr_table.loc[lan_aux].values[0]
+        overlap_word = overlap_word_table.loc[lan_aux, lan_task] / overlap_word_table.loc[lan_task, lan_task]
+        datasize = datasize_table.loc[lan_aux].values[0]
+        ttr_target = ttr_table.loc[lan_task].values[0]
+        ttr_diff = (ttr - ttr_target) / ttr_target
+        datasize_target = datasize_table.loc[lan_task].values[0]
+        datasize_ratio = datasize / datasize_target
+        distance_list = [dtable.loc[lan_aux, lan_task] for dtable in distance_tables]
 
-        count_entity_match = entity_match_table.loc[lan_aux, lan_task] / entity_match_table.loc[lan_task, lan_task]
-        # The datasize should be the number of overlapping entities between the language and itself
-        datasize_aux = entity_match_table.loc[lan_aux, lan_aux]
-        datasize_task = entity_match_table.loc[lan_task, lan_task]
-        datasize_ratio = datasize_aux / datasize_task
-        distance_list = [dtable.loc[convert(lan_aux), convert(lan_task)] for dtable in distance_tables]
-
-        extracted_type.append([count_entity_match, datasize_aux, datasize_task, datasize_ratio] + distance_list)
+        extracted_type.append([ttr, overlap_word, datasize, ttr_diff, datasize_ratio, datasize_target] + distance_list)
 
     table = np.column_stack((table, np.array(extracted_type)))
 
     # Write out raw dataset for ranking
-    with open(os.path.join(root, "data_ranking_el.csv"), "w") as f:
+    with open(os.path.join(root, "data_ranking_mt.csv"), "w") as f:
         for row in table:
-            print(",".join(list(row)), file=f)
+            print(",".join(row), file=f)
