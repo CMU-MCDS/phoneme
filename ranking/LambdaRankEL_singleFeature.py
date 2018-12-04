@@ -23,23 +23,24 @@ def lgbm_rel_exp(BLEU_level, cutoff):
 
 if __name__ == "__main__":
     # Working directory on clio
-    # root = "/home/yuhsianl/public/phoneme_common_data/data/mt"
-
-    # Working directory on your local machine
-    root = "/Users/yuhsianglin/Dropbox/cmu/11634A_11632A_capstone/20181029 Jupyter notebook"
+    root = "/home/yuhsianl/public/phoneme_common_data/data/el/"
 
     # Create directory for output
-    output_dir = os.path.join(root, "output_mt")
+    output_dir = os.path.join(root, "output_el")
     if not os.path.isdir(output_dir):
         os.makedirs(output_dir)
 
     # Load data for ranking model
-    data_file = "data_ranking_mt.csv"
-    lang_set_file = "language_set.txt"
+    data_file = "data_ranking_el.csv" #Dataset-dependent features
     data = np.loadtxt(os.path.join(root, data_file), dtype=str, delimiter=",")
-    lang_set = np.loadtxt(os.path.join(root, lang_set_file), dtype=str)
 
-    # Do 53--1 training/test set separation
+    task_lang_file = 'task_language_set.txt'
+    aux_language_file = 'aux_language_set.txt'
+    task_language_set = np.loadtxt(os.path.join(root, task_lang_file), dtype=str)
+    aux_language_set = np.loadtxt(os.path.join(root, aux_language_file), dtype=str)
+
+
+    # Do leave one out training/test set separation
     NDCG_list = []
     test_data_size_list = []
 
@@ -63,14 +64,14 @@ if __name__ == "__main__":
     # }
     NDCG_output_dict = {"LambdaRank": {"task_lang": [], "NDCG_list": [], "avg": -1, "std": -1}}
 
-    single_feature_name_list = ["Aux lang TTR", "Overlap word-level", "Overlap subword-level", "Aux lang dataset size", "TTR difference ratio", "Dataset size ratio", "Task lang dataset size", "GEOGRAPHIC", "GENETIC", "SYNTACTIC", "FEATURAL", "INVENTORY", "PHONOLOGICAL"]
+    single_feature_name_list = ["Count entity_match","Aux lang dataset size", "Task lang dataset size",
+    "Dataset size ratio", "GENETIC", "SYNTACTIC", "FEATURAL", "PHONOLOGICAL", "INVENTORY", "GEOGRAPHIC"]
     for feature in single_feature_name_list:
         NDCG_output_dict[feature] = {"task_lang": [], "NDCG_list": [], "avg": -1, "std": -1}
 
-    for task_lang_idx in range(lang_set.shape[0]):
-        test_lang_set = [lang_set[task_lang_idx]]
-        train_lang_set = np.concatenate((lang_set[:task_lang_idx], lang_set[task_lang_idx + 1:]), axis=0)
-        assert(train_lang_set.shape[0] == 53)
+    for i in range(0, task_language_set.shape[0]): 
+        test_lang_set = [task_language_set[i]]
+        train_lang_set = [l for l in aux_language_set if l not in test_lang_set]
         assert(test_lang_set[0] not in list(train_lang_set))
 
         # Count number of queries in a query group of a task language
@@ -101,14 +102,13 @@ if __name__ == "__main__":
             BLEU_level = int(row[4])
             rel_exp = lgbm_rel_exp(BLEU_level, REL_EXP_CUTOFF)
 
-            # Features are:
-            # ["Aux lang TTR", "Overlap word-level", "Overlap subword-level", "Aux lang dataset size", "TTR difference ratio", "Dataset size ratio", "Task lang dataset size", "GEOGRAPHIC", "GENETIC", "SYNTACTIC", "FEATURAL", "INVENTORY", "PHONOLOGICAL"]
             features = row[5:]
+            feature_dict = {k: v for k, v in enumerate(features)}
 
             # Here we use BLEU_level as our relevance exponent
             line_out = [str(rel_exp)]
 
-            line_out.extend([str(k) + ":" + str(v) for k, v in enumerate(features)])
+            line_out.extend([str(k) + ":" + str(v) for k, v in feature_dict.items()])
 
             if task_lang in train_lang_set and aux_lang in train_lang_set:
                 print(" ".join(line_out), file=rank_train_file)
@@ -147,7 +147,6 @@ if __name__ == "__main__":
         model.fit(X_train, y_train, group=qgsize_train,
                   eval_set=[(X_test, y_test)], eval_group=[qgsize_test], eval_at=3,
                   early_stopping_rounds=40, eval_metric="ndcg", verbose=False)
-        model.booster_.save_model(os.path.join(output_dir, "lgbm_model_mt_" + lang_set[task_lang_idx] + ".txt"))
 
         print("================================")
         print("Features:", data[0, 5:])
@@ -175,10 +174,6 @@ if __name__ == "__main__":
             task_lang = test_lang_pair[qg_start_idx, 0]
             task_size = test_lang_pair[qg_start_idx, 6]
 
-            true_ranking = test_lang_pair[qg_start_idx:qg_start_idx + int(qg_size), 2].astype(int)
-            true_best_aux_idx = np.argsort(true_ranking)
-
-            # Here we assert there are only one task language
             test_data_size_list.append(task_size)
 
             # topK_output_dict should be:
@@ -190,7 +185,9 @@ if __name__ == "__main__":
             #  ...
             # }
             # We will save it as an json file
-            topK_output_dict = {"task_lang": lang_set[task_lang_idx]}
+            # topK_output_dict = {"task_lang": lang_set[task_lang_idx]}
+            topK_output_dict = {"task_lang": task_lang}
+
 
             # Extract top-K results
             topK_aux_lang_list = []
@@ -203,24 +200,15 @@ if __name__ == "__main__":
                 topK_true_rank_list.append(int(test_lang_pair_row[2]))
             topK_output_dict["LambdaRank"] = [topK_aux_lang_list, topK_true_rank_list]
 
-            # Extract true top-K
-            true_topK_aux_lang_list = []
-            true_topK_true_rank_list = []
-            for topK_k in range(PRINT_TOP_K):
-                test_lang_pair_row = test_lang_pair[qg_start_idx + true_best_aux_idx[topK_k]]
-                # The first 3 columns are: task_lang, aux_lang, str(rank)
-                true_topK_aux_lang_list.append(test_lang_pair_row[1])
-                true_topK_true_rank_list.append(int(test_lang_pair_row[2]))
-            topK_output_dict["Truth"] = [true_topK_aux_lang_list, true_topK_true_rank_list]
-
             # Extract top-K results by each single feature
-            # single_feature_name_list = ["Aux lang TTR", "Overlap word-level", "Overlap subword-level", "Aux lang dataset size", "TTR difference ratio", "Dataset size ratio", "Task lang dataset size", "GEOGRAPHIC", "GENETIC", "SYNTACTIC", "FEATURAL", "INVENTORY", "PHONOLOGICAL"]
-
             best_aux_idx_by_single_feature_lists = [[] for _ in range(len(single_feature_name_list))]
             # Smaller value is better (e.g. distance) => sign = +1
             # Larger value is better (e.g. dataset size) => sign = -1
             # 0 means we ignore this feature (don't compute single-feature result of it)
-            sort_sign_list = [0, -1, -1, -1, 0, -1, -1, 1, 1, 1, 1, 1, 1]
+            
+            #["Count entity_match","Aux lang dataset size", "Task lang dataset size","Dataset size ratio", 
+            # "GENETIC", "SYNTACTIC", "FEATURAL", "PHONOLOGICAL", "INVENTORY", "GEOGRAPHIC"
+            sort_sign_list = [-1, -1, -1, -1, 1, 1, 1, 1, 1, 1]
             assert(len(sort_sign_list) == len(single_feature_name_list))
 
             topK_aux_lang_by_single_feature_lists = [[] for _ in range(len(single_feature_name_list))]
@@ -238,7 +226,8 @@ if __name__ == "__main__":
 
                     topK_output_dict[single_feature_name_list[single_feature_idx]] = [topK_aux_lang_by_single_feature_lists[single_feature_idx], topK_true_rank_by_single_feature_lists[single_feature_idx]]
 
-            with open(os.path.join(output_dir, "topK_" + lang_set[task_lang_idx] + ".json"), "w") as f:
+            # with open(os.path.join(output_dir, "topK_" + lang_set[task_lang_idx] + ".json"), "w") as f:
+            with open(os.path.join(output_dir, "topK_" + task_lang + ".json"), "w") as f:
                 json.dump(topK_output_dict, f)
 
             # Compute NDCG
@@ -250,14 +239,16 @@ if __name__ == "__main__":
 
             relevance_sorted_lgbm = y_test[qg_start_idx + best_aux_idx]
             NDCG = evaluation.ndcg(relevance_sorted_lgbm, PRINT_TOP_K, relevance_sorted_true)
-            NDCG_output_dict["LambdaRank"]["task_lang"].append(lang_set[task_lang_idx])
+            # NDCG_output_dict["LambdaRank"]["task_lang"].append(lang_set[task_lang_idx])
+            NDCG_output_dict["LambdaRank"]["task_lang"].append(task_lang)
             NDCG_output_dict["LambdaRank"]["NDCG_list"].append(NDCG)
 
             for single_feature_idx in range(len(single_feature_name_list)):
                 if sort_sign_list[single_feature_idx] != 0:
                     relevance_sorted_single_feature = y_test[qg_start_idx + best_aux_idx_by_single_feature_lists[single_feature_idx]]
                     NDCG_single_feature = evaluation.ndcg(relevance_sorted_single_feature, PRINT_TOP_K, relevance_sorted_true)
-                    NDCG_output_dict[single_feature_name_list[single_feature_idx]]["task_lang"].append(lang_set[task_lang_idx])
+                    # NDCG_output_dict[single_feature_name_list[single_feature_idx]]["task_lang"].append(lang_set[task_lang_idx])
+                    NDCG_output_dict[single_feature_name_list[single_feature_idx]]["task_lang"].append(task_lang)
                     NDCG_output_dict[single_feature_name_list[single_feature_idx]]["NDCG_list"].append(NDCG_single_feature)
                 else:
                     # Remove the un-used feature item placeholder
@@ -276,12 +267,3 @@ if __name__ == "__main__":
 
     with open(os.path.join(output_dir, "NDCG.json"), "w") as f:
         json.dump(NDCG_output_dict, f)
-
-    """
-    plt.plot(test_data_size_list, NDCG_list, "k.")
-    plt.xlabel("Task language data size")
-    plt.ylabel("Average NDCG@3")
-    plt.savefig("./NDCG3_datasize.png")
-    plt.clf()
-    plt.close()
-    """
