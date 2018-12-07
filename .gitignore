@@ -43,4 +43,10 @@ log_*
 
 ranking/NDCG3_datasize.png
 
+ranking/train_mt
+ranking/train_el
+ranking/train_pos
+
+
+
 

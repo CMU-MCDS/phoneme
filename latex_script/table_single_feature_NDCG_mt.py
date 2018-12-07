@@ -32,14 +32,14 @@ def main():
 
     # The head and tail of the latex table
     latex_head = "\\begin{table}[t!]\n\\begin{center}\n\\begin{tabular}{l|c}\n\\midrule\n\\bf Model & \\bf avg $\\pm$ std \\\\\n\\midrule\n"
-    latex_tail = "\\midrule\n\\end{tabular}\n\\end{center}\n\\caption{\\label{tabel:SingleFeatureNDCGinMT} The average and standard deviation of NDCG@3 over 54 task languages in machine translation, using the LambdaRank mode, each single statistical feature, and each single URIEL distance.}\n\\end{table}\n"
+    latex_tail = "\\midrule\n\\end{tabular}\n\\end{center}\n\\caption{\\label{tabel:SingleFeatureNDCGinMT} The average and standard deviation of NDCG@3 over 54 task languages in machine translation, using the LambdaRank model, each single statistical feature, and each single URIEL distance.}\n\\end{table}"
 
     latex_filling = ""
     for model, ndcg_dict in NDCG_output_dict.items():
         latex_filling += "%s & %.1f $\\pm$ %.1f \\\\\n" % (symbol_dict[model], NDCG_output_dict[model]["avg"] * 100, NDCG_output_dict[model]["std"] * 100)
 
     table_latex = latex_head + latex_filling + latex_tail
-    with open(os.path.join(output_dir, "latex_table_single_feature_NDCG.txt"), "w") as f:
+    with open(os.path.join(output_dir, "single_feature_mt.tex"), "w") as f:
         print(table_latex, file=f)
 
 if __name__ == '__main__':

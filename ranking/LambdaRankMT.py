@@ -83,7 +83,9 @@ if __name__ == "__main__":
         test_query_seq = []
 
         # Generate training/test data for LightGBM
-        rank_train_dir = "."
+        rank_train_dir = "./train_mt"
+        if not os.path.exists(rank_train_dir):
+            os.makedirs(rank_train_dir)
         rank_train_file = open(os.path.join(rank_train_dir, "rank.train.txt"), "w")
         rank_test_file = open(os.path.join(rank_train_dir, "rank.test.txt"), "w")
         rank_train_lang_pair_file = open(os.path.join(rank_train_dir, "rank.train.langpair.txt"), "w")
@@ -173,7 +175,7 @@ if __name__ == "__main__":
             qg_scores = predict_scores[qg_start_idx:qg_start_idx + int(qg_size)]
             best_aux_idx = np.argsort(-qg_scores)   # argsort: ascending
             task_lang = test_lang_pair[qg_start_idx, 0]
-            task_size = test_lang_pair[qg_start_idx, 6]
+            task_size = test_lang_pair[qg_start_idx, 8]     # Need to change this if features change!
 
             true_ranking = test_lang_pair[qg_start_idx:qg_start_idx + int(qg_size), 2].astype(int)
             true_best_aux_idx = np.argsort(true_ranking)
@@ -214,9 +216,7 @@ if __name__ == "__main__":
             topK_output_dict["Truth"] = [true_topK_aux_lang_list, true_topK_true_rank_list]
 
             # Extract top-K results by each single feature
-            # single_feature_name_list = ["Aux lang TTR", "Overlap word-level", "Overlap subword-level", "Aux lang dataset size", "TTR difference ratio", "Dataset size ratio", "Task lang dataset size", "GEOGRAPHIC", "GENETIC", "SYNTACTIC", "FEATURAL", "INVENTORY", "PHONOLOGICAL"]
-
-            "Overlap word-level", "Overlap subword-level", "Transfer lang dataset size", "Target lang dataset size", "Transfer over target size ratio", "Transfer lang TTR", "Target lang TTR", "Transfer target TTR distance", "GENETIC", "SYNTACTIC", "FEATURAL", "PHONOLOGICAL", "INVENTORY", "GEOGRAPHIC"
+            # single_feature_name_list = ["Overlap word-level", "Overlap subword-level", "Transfer lang dataset size", "Target lang dataset size", "Transfer over target size ratio", "Transfer lang TTR", "Target lang TTR", "Transfer target TTR distance", "GENETIC", "SYNTACTIC", "FEATURAL", "PHONOLOGICAL", "INVENTORY", "GEOGRAPHIC"]
 
             best_aux_idx_by_single_feature_lists = [[] for _ in range(len(single_feature_name_list))]
             # Smaller value is better (e.g. distance) => sign = +1

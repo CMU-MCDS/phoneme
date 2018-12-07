@@ -56,17 +56,16 @@ if __name__ == "__main__":
 
     # mt_ttr, mt_overlap_word.csv, mt_overlap_subword.csv, mt_datasize.csv
     # are the sheets in our feature spreadsheet.
-    extracted_root = root
-    ttr_table = pd.read_csv(os.path.join(extracted_root, "mt_ttr.csv"))
+    ttr_table = pd.read_csv(os.path.join(root, "mt_ttr.csv"))
     ttr_table = ttr_table.set_index("Lang")
 
-    overlap_word_table = pd.read_csv(os.path.join(extracted_root, "mt_overlap_word.csv"))
+    overlap_word_table = pd.read_csv(os.path.join(root, "mt_overlap_word.csv"))
     overlap_word_table = overlap_word_table.set_index("lang")
 
-    overlap_subword_table = pd.read_csv(os.path.join(extracted_root, "mt_overlap_subword.csv"))
+    overlap_subword_table = pd.read_csv(os.path.join(root, "mt_overlap_subword.csv"))
     overlap_subword_table = overlap_subword_table.set_index("lang")
 
-    datasize_table = pd.read_csv(os.path.join(extracted_root, "mt_datasize.csv"))
+    datasize_table = pd.read_csv(os.path.join(root, "mt_datasize.csv"))
     datasize_table = datasize_table.set_index("Language")
 
     # URIEL distance

@@ -10,7 +10,7 @@ from collections import Counter
 from collections import defaultdict
 
 # Working directory on clio
-root = "/home/yuhsianl/public/phoneme_common_data/data/el/"
+root = "/home/yuhsianl/public/phoneme_common_data/data/el"
 
 # Conversion mapping between ISO 639 1 and 3
 iso_mapping_file = 'ISO_639_1_TO_3.txt'
@@ -20,55 +20,52 @@ for pair in np.loadtxt(os.path.join(root, iso_mapping_file), dtype=str, delimite
     iso_mapping_dict[pair[0]] = pair[1]
 
 def convert(code):
-    if code in iso_mapping_dict:
-        return iso_mapping_dict[code]
-    return code
+    return iso_mapping_dict[code] if code in iso_mapping_dict else code
 
 if __name__ == "__main__":
     ### Load baseline experiment result: Get ranking ###
     # EL_PanPhon.csv is Shruti's Panphon Entity Linking experiment results
     baseline = pd.read_csv(os.path.join(root, "EL_PanPhon.csv"))
-    baseline = baseline.set_index("v pivot v \ test >>")
+    baseline = baseline.set_index("v pivot v \\ test >>")
 
-    # Task language set and auxiliary language set for the entity linking experiment
-    task_lang_set = baseline.columns.values
-    aux_lang_set = baseline.index.values
+    # Target language set and transfer language set for the entity linking experiment
+    tg_lang_set = baseline.columns.values
+    tf_lang_set = baseline.index.values
 
-    with open(os.path.join(root, "task_language_set.txt"), "w") as f:
-        for lan in task_lang_set:
+    with open(os.path.join(root, "tg_language_set.txt"), "w") as f:
+        for lan in tg_lang_set:
             print(lan, file=f)
 
-    with open(os.path.join(root, "aux_language_set.txt"), "w") as f:
-        for lan in aux_lang_set:
+    with open(os.path.join(root, "tf_language_set.txt"), "w") as f:
+        for lan in tf_lang_set:
             print(lan, file=f)
 
 
     # Format the data table 
-    table = [["Task lang", "Aux lang", "Accuracy"]]
+    table = [["Target lang", "Transfer lang", "Accuracy"]]
     rank = ["Rank"]
     accuracy_level = ["Accuracy level"]
 
-    for lan_task in task_lang_set:
+    for lan_tg in tg_lang_set:
         rank_score = []
-        for lan_aux in aux_lang_set:
-            if lan_task == lan_aux or baseline.loc[lan_aux, lan_task] == 'xxx':
+        for lan_tf in tf_lang_set:
+            if lan_tg == lan_tf or baseline.loc[lan_tf, lan_tg] == 'xxx':
                 continue
-            table.append([str(lan_task), str(lan_aux), float(baseline.loc[lan_aux, lan_task])])
+            table.append([str(lan_tg), str(lan_tf), float(baseline.loc[lan_tf, lan_tg])])
             # Note: use negative Accuracy score here
             # scipy.stats.rankdata() gives rank [1, 2, 3, ...] to negative Accuracy scores [-0.3, -0.2, -0.1],
             # so higher Accuracy score is put in the front (small "rank" integer value) of the ranking result
-            rank_score.append(-float(baseline.loc[lan_aux, lan_task]))
+            rank_score.append(-float(baseline.loc[lan_tf, lan_tg]))
 
         rank.extend(rankdata(rank_score, 'min'))
-        accuracy_level.extend(rankdata(list(-np.array(rank_score)), 'min'))
+        accuracy_level.extend(rankdata(list(-np.array(rank_score)), 'max'))
 
     table = np.column_stack((np.array(table), np.array(rank), np.array(accuracy_level)))
     
     
     #####################
     # entity_match.csv is our feature spreadsheet of the counts of overlapping entity between two languages
-    extracted_root = root
-    entity_match_table = pd.read_csv(os.path.join(extracted_root, "entity_match.csv"))
+    entity_match_table = pd.read_csv(os.path.join(root, "entity_match.csv"))
     entity_match_table = entity_match_table.set_index("lang")
 
     # URIEL distance
@@ -84,20 +81,20 @@ if __name__ == "__main__":
 
     #####################
 
-    extracted_type = [["Count entity_match", "Aux lang dataset size", "Task lang dataset size", "Dataset size ratio"] + distance_category]
+    extracted_type = [["Entity overlap", "Transfer lang dataset size", "Target lang dataset size", "Transfer over target size ratio"] + distance_category]
     
 
     for i in range(1, table.shape[0]):
-        lan_task, lan_aux, _, _, _ = table[i]
+        lan_tg, lan_tf, _, _, _ = table[i]
 
-        count_entity_match = entity_match_table.loc[lan_aux, lan_task] / entity_match_table.loc[lan_task, lan_task]
+        entity_overlap = entity_match_table.loc[lan_tf, lan_tg] / entity_match_table.loc[lan_tg, lan_tg]
         # The datasize should be the number of overlapping entities between the language and itself
-        datasize_aux = entity_match_table.loc[lan_aux, lan_aux]
-        datasize_task = entity_match_table.loc[lan_task, lan_task]
-        datasize_ratio = datasize_aux / datasize_task
-        distance_list = [dtable.loc[convert(lan_aux), convert(lan_task)] for dtable in distance_tables]
+        datasize_tf = entity_match_table.loc[lan_tf, lan_tf]
+        datasize_tg = entity_match_table.loc[lan_tg, lan_tg]
+        datasize_tf_to_tg_ratio = datasize_tf / datasize_tg
+        distance_list = [dtable.loc[convert(lan_tf), convert(lan_tg)] for dtable in distance_tables]
 
-        extracted_type.append([count_entity_match, datasize_aux, datasize_task, datasize_ratio] + distance_list)
+        extracted_type.append([entity_overlap, datasize_tf, datasize_tg, datasize_tf_to_tg_ratio] + distance_list)
 
 
     table = np.column_stack((table, np.array(extracted_type)))
