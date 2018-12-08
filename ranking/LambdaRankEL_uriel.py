@@ -15,33 +15,30 @@ import json
 # It is used in the DCG@N as
 # \sum_{i = 1}^N \frac{2^{relevance exponent} - 1}{log_2 (1 + i)}
 #
-# Transform the BLEU level [cutoff, cutoff + 1, ...] into relevance exponent [1, 2, ...],
-# and assign the BLEU levels below cutoff to relevance exponent 0
-def lgbm_rel_exp(BLEU_level, cutoff):
-    return BLEU_level - cutoff + 1 if BLEU_level >= cutoff else "0"
-
-# Remove the parenthesis in the language code
-def get_lan_code(label):
-    return label.split("(")[0]
+# Transform the acc level [cutoff, cutoff + 1, ...] into relevance exponent [1, 2, ...],
+# and assign the acc levels below cutoff to relevance exponent 0
+def lgbm_rel_exp(acc_level, cutoff):
+    return acc_level - cutoff + 1 if acc_level >= cutoff else "0"
 
 
 if __name__ == "__main__":
     # Working directory on clio
-    root = "/home/yuhsianl/public/phoneme_common_data/data/pos"
+    root = "/home/yuhsianl/public/phoneme_common_data/data/el"
 
     # Create directory for output
-    output_dir = os.path.join(root, "output_pos")
+    output_dir = os.path.join(root, "output_el_uriel")
     if not os.path.isdir(output_dir):
         os.makedirs(output_dir)
 
     # Load data for ranking model
-    data_file = "data_ranking_pos.csv" #Dataset-dependent features
+    data_file = "data_ranking_el.csv" #Dataset-dependent features
     data = np.loadtxt(os.path.join(root, data_file), dtype=str, delimiter=",")
 
-    task_lang_file = 'task_language_set.txt'
-    aux_lang_file = 'aux_language_set.txt'
-    task_lang_set = np.array([get_lan_code(l) for l in np.loadtxt(os.path.join(root, task_lang_file), dtype=str)])
-    aux_lang_set = np.array([get_lan_code(l) for l in np.loadtxt(os.path.join(root, aux_lang_file), dtype=str)])
+    task_lang_file = 'tg_language_set.txt'
+    aux_lang_file = 'tf_language_set.txt'
+    task_lang_set = np.loadtxt(os.path.join(root, task_lang_file), dtype=str)
+    aux_lang_set = np.loadtxt(os.path.join(root, aux_lang_file), dtype=str)
+
 
     # Do leave one out training/test set separation
 
@@ -65,14 +62,14 @@ if __name__ == "__main__":
     # }
     NDCG_output_dict = {"LambdaRank": {"task_lang": [], "NDCG_list": [], "avg": -1, "std": -1}}
 
-    single_feature_name_list = ["Overlap word-level", "Transfer lang dataset size", "Target lang dataset size", "Transfer over target size ratio", "Transfer lang TTR", "Target lang TTR", "Transfer target TTR distance", "GENETIC", "SYNTACTIC", "FEATURAL", "PHONOLOGICAL", "INVENTORY", "GEOGRAPHIC"]
+    single_feature_name_list = ["GENETIC", "SYNTACTIC", "FEATURAL", "PHONOLOGICAL", "INVENTORY", "GEOGRAPHIC"]
     for feature in single_feature_name_list:
         NDCG_output_dict[feature] = {"task_lang": [], "NDCG_list": [], "avg": -1, "std": -1}
 
     for task_lang_idx in range(task_lang_set.shape[0]):
         test_lang_set = [task_lang_set[task_lang_idx]]
         train_lang_set = [lang for lang in aux_lang_set if lang not in test_lang_set]
-        assert(len(train_lang_set) == 60 or len(train_lang_set) == 59)
+        assert(len(train_lang_set) == 53)
         assert(test_lang_set[0] not in list(train_lang_set))
 
         # Count number of queries in a query group of a task language
@@ -85,7 +82,7 @@ if __name__ == "__main__":
         test_query_seq = []
 
         # Generate training/test data for LightGBM
-        rank_train_dir = "./train_pos"
+        rank_train_dir = "./train_el"
         if not os.path.exists(rank_train_dir):
             os.makedirs(rank_train_dir)
         rank_train_file = open(os.path.join(rank_train_dir, "rank.train.txt"), "w")
@@ -106,8 +103,8 @@ if __name__ == "__main__":
             rel_exp = lgbm_rel_exp(acc_level, REL_EXP_CUTOFF)
 
             # Features are:
-            # ["Overlap word-level", "Transfer lang dataset size", "Target lang dataset size", "Transfer over target size ratio", "Transfer lang TTR", "Target lang TTR", "Transfer target TTR distance", "GENETIC", "SYNTACTIC", "FEATURAL", "PHONOLOGICAL", "INVENTORY", "GEOGRAPHIC"]
-            features = row[5:]
+            # ["Entity overlap", "Transfer lang dataset size", "Target lang dataset size", "Transfer over target size ratio", "GENETIC", "SYNTACTIC", "FEATURAL", "PHONOLOGICAL", "INVENTORY", "GEOGRAPHIC"]
+            features = row[-6:]
 
             # Here we use acc_level as our relevance exponent
             line_out = [str(rel_exp)]
@@ -151,7 +148,7 @@ if __name__ == "__main__":
         model.fit(X_train, y_train, group=qgsize_train,
                   eval_set=[(X_test, y_test)], eval_group=[qgsize_test], eval_at=3,
                   early_stopping_rounds=40, eval_metric="ndcg", verbose=False)
-        model.booster_.save_model(os.path.join(output_dir, "lgbm_model_pos_" + task_lang_set[task_lang_idx] + ".txt"))
+        model.booster_.save_model(os.path.join(output_dir, "lgbm_model_el_" + task_lang_set[task_lang_idx] + ".txt"))
 
         print("================================")
         print("Features:", data[0, 5:])
@@ -212,13 +209,13 @@ if __name__ == "__main__":
             topK_output_dict["Truth"] = [true_topK_aux_lang_list, true_topK_true_rank_list]
 
             # Extract top-K results by each single feature
-            # single_feature_name_list = ["Overlap word-level", "Transfer lang dataset size", "Target lang dataset size", "Transfer over target size ratio", "Transfer lang TTR", "Target lang TTR", "Transfer target TTR distance", "GENETIC", "SYNTACTIC", "FEATURAL", "PHONOLOGICAL", "INVENTORY", "GEOGRAPHIC"]
+            # single_feature_name_list = ["Entity overlap", "Transfer lang dataset size", "Target lang dataset size", "Transfer over target size ratio", "GENETIC", "SYNTACTIC", "FEATURAL", "PHONOLOGICAL", "INVENTORY", "GEOGRAPHIC"]
 
             best_aux_idx_by_single_feature_lists = [[] for _ in range(len(single_feature_name_list))]
             # Smaller value is better (e.g. distance) => sign = +1
             # Larger value is better (e.g. dataset size) => sign = -1
             # 0 means we ignore this feature (don't compute single-feature result of it)
-            sort_sign_list = [-1, -1, 0, -1, 0, 0, 1, 1, 1, 1, 1, 1, 1]
+            sort_sign_list = [1, 1, 1, 1, 1, 1]
             assert(len(sort_sign_list) == len(single_feature_name_list))
 
             topK_aux_lang_by_single_feature_lists = [[] for _ in range(len(single_feature_name_list))]
