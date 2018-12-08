@@ -32,7 +32,7 @@ def main():
 
     # The head and tail of the latex table
     latex_head = "\\begin{table}[t!]\n\\begin{center}\n\\begin{tabular}{l|c}\n\\midrule\n\\bf Model & \\bf avg $\\pm$ std \\\\\n\\midrule\n"
-    latex_tail = "\\midrule\n\\end{tabular}\n\\end{center}\n\\caption{\\label{tabel:SingleFeatureNDCGinMT} The average and standard deviation of NDCG@3 over 9 task languages in machine translation, using the LambdaRank model, each single statistical feature, and each single URIEL distance.}\n\\end{table}"
+    latex_tail = "\\midrule\n\\end{tabular}\n\\end{center}\n\\caption{\\label{tabel:SingleFeatureNDCGinMT} The average and standard deviation of NDCG@3 over 54 task languages in machine translation, using the LambdaRank model, each single statistical feature, and each single URIEL distance.}\n\\end{table}"
 
     latex_filling = ""
     for model, ndcg_dict in NDCG_output_dict.items():
