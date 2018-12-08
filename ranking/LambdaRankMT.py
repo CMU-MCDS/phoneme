@@ -29,7 +29,7 @@ if __name__ == "__main__":
     # root = "/Users/yuhsianglin/Dropbox/cmu/phoneme_data/mt"
 
     # Create directory for output
-    output_dir = os.path.join(root, "output_mt")
+    output_dir = os.path.join(root, "output_mt_learn_5")
     if not os.path.isdir(output_dir):
         os.makedirs(output_dir)
 
@@ -93,7 +93,9 @@ if __name__ == "__main__":
 
         # Transform the BLEU level [cutoff, cutoff + 1, ...] into relevance exponent [1, 2, ...],
         # and assign the BLEU levels below cutoff to relevance exponent 0
-        REL_EXP_CUTOFF = 44
+
+        # REL_EXP_CUTOFF = train_lang_set.shape[0] - 9
+        REL_EXP_CUTOFF = train_lang_set.shape[0] - 4
 
         for data_row_idx in range(1, data.shape[0]):
             row = data[data_row_idx]
