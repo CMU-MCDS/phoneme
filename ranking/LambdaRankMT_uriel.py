@@ -25,9 +25,6 @@ if __name__ == "__main__":
     # Data directory on clio
     root = "/home/yuhsianl/public/phoneme_common_data/data/mt"
 
-    # Data directory on your local machine
-    # root = "/Users/yuhsianglin/Dropbox/cmu/phoneme_data/mt"
-
     # Create directory for output
     output_dir = os.path.join(root, "output_mt_uriel")
     if not os.path.isdir(output_dir):
