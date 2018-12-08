@@ -30,7 +30,7 @@ if __name__ == "__main__":
     root = "/home/yuhsianl/public/phoneme_common_data/data/pos"
 
     # Create directory for output
-    output_dir = os.path.join(root, "output_pos")
+    output_dir = os.path.join(root, "output_pos_learn_5")
     if not os.path.isdir(output_dir):
         os.makedirs(output_dir)
 
@@ -97,10 +97,9 @@ if __name__ == "__main__":
 
         # Transform the acc level [cutoff, cutoff + 1, ...] into relevance exponent [1, 2, ...],
         # and assign the acc levels below cutoff to relevance exponent 0
-        if len(train_lang_set) == 60:
-            REL_EXP_CUTOFF = 51
-        elif len(train_lang_set) == 59:
-            REL_EXP_CUTOFF = 50 
+
+        # REL_EXP_CUTOFF = len(train_lang_set) - 9
+        REL_EXP_CUTOFF = len(train_lang_set) - 4
 
         for data_row_idx in range(1, data.shape[0]):
             row = data[data_row_idx]
