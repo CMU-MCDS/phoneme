@@ -94,7 +94,7 @@ if __name__ == "__main__":
 
         # Transform the acc level [cutoff, cutoff + 1, ...] into relevance exponent [1, 2, ...],
         # and assign the acc levels below cutoff to relevance exponent 0
-        REL_EXP_CUTOFF = 44
+        REL_EXP_CUTOFF = len(train_lang_set) - 9
 
         for data_row_idx in range(1, data.shape[0]):
             row = data[data_row_idx]
