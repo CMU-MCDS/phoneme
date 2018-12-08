@@ -40,8 +40,6 @@ if __name__ == "__main__":
     lang_set = np.loadtxt(os.path.join(root, lang_set_file), dtype=str)
 
     # Do 53--1 training/test set separation
-    NDCG_list = []
-    test_data_size_list = []
 
     # NDCG_output_dict should be:
     # {
@@ -162,8 +160,6 @@ if __name__ == "__main__":
         print("Best iteration =", model.best_iteration_)
         print("Total number of training iterations =", len(model.evals_result_["valid_0"]["ndcg@3"]))
 
-        NDCG_list.append(model.best_score_['valid_0']['ndcg@3'])
-
         test_lang_pair = np.loadtxt(os.path.join(rank_train_dir, "rank.test.langpair.txt"), dtype=str, delimiter=",")
         PRINT_TOP_K = 3
 
@@ -179,9 +175,6 @@ if __name__ == "__main__":
 
             true_ranking = test_lang_pair[qg_start_idx:qg_start_idx + int(qg_size), 2].astype(int)
             true_best_aux_idx = np.argsort(true_ranking)
-
-            # Here we assert there are only one task language
-            test_data_size_list.append(task_size)
 
             # topK_output_dict should be:
             # {
@@ -278,12 +271,3 @@ if __name__ == "__main__":
 
     with open(os.path.join(output_dir, "NDCG.json"), "w") as f:
         json.dump(NDCG_output_dict, f)
-
-    """
-    plt.plot(test_data_size_list, NDCG_list, "k.")
-    plt.xlabel("Task language data size")
-    plt.ylabel("Average NDCG@3")
-    plt.savefig("./NDCG3_datasize.png")
-    plt.clf()
-    plt.close()
-    """
