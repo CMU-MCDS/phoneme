@@ -58,7 +58,7 @@ if __name__ == "__main__":
 
     table = [["Task lang", "Aux lang", "Accuracy"]]
     rank = ["Rank"]
-    Accuracy_level = ["Accuracy level"]
+    accuracy_level = ["Accuracy level"]
 
     task_lang_set = np.loadtxt(os.path.join(root, "task_language_set.txt"), dtype=str, delimiter="\n")
     aux_lang_set = np.loadtxt(os.path.join(root, "aux_language_set.txt"), dtype=str, delimiter="\n")
@@ -75,9 +75,9 @@ if __name__ == "__main__":
             rank_score.append(-float(baseline.loc[lan_aux, lan_task]))
 
         rank.extend(rankdata(rank_score, 'min'))
-        Accuracy_level.extend(rankdata(list(-np.array(rank_score)), 'min'))
+        accuracy_level.extend(rankdata(list(-np.array(rank_score)), 'max'))
 
-    table = np.column_stack((np.array(table), np.array(rank), np.array(Accuracy_level)))
+    table = np.column_stack((np.array(table), np.array(rank), np.array(accuracy_level)))
 
     #####################
 
@@ -106,22 +106,20 @@ if __name__ == "__main__":
 
     #####################
 
-    extracted_type = [["Aux lang TTR", "Overlap word-level", "Aux lang dataset size", "TTR difference ratio", "Dataset size ratio", "Task lang dataset size"] + distance_category]
-    
-    for i in range(1, table.shape[0]):
-        lan_task, lan_aux, _, _, _ = table[i]
-        lan_task = get_lan_code(lan_task)
-        lan_aux = get_lan_code(lan_aux)
-        ttr = ttr_table.loc[lan_aux].values[0]
-        overlap_word = overlap_word_table.loc[lan_aux, lan_task] / overlap_word_table.loc[lan_task, lan_task]
-        datasize = datasize_table.loc[lan_aux].values[0]
-        ttr_target = ttr_table.loc[lan_task].values[0]
-        ttr_diff = (ttr - ttr_target) / ttr_target
-        datasize_target = datasize_table.loc[lan_task].values[0]
-        datasize_ratio = datasize / datasize_target
-        distance_list = [dtable.loc[convert(lan_aux), convert(lan_task)] for dtable in distance_tables]
+    extracted_type = [["Overlap word-level", "Transfer lang dataset size", "Target lang dataset size", "Transfer over target size ratio", "Transfer lang TTR", "Target lang TTR", "Transfer target TTR distance"] + distance_category]
 
-        extracted_type.append([ttr, overlap_word, datasize, ttr_diff, datasize_ratio, datasize_target] + distance_list)
+    for i in range(1, table.shape[0]):
+        lan_tg, lan_tf, _, _, _ = table[i]
+        overlap_word = overlap_word_table.loc[lan_tf, lan_tg] / overlap_word_table.loc[lan_tg, lan_tg]
+        datasize_tf = datasize_table.loc[lan_tf].values[0]
+        datasize_tg = datasize_table.loc[lan_tg].values[0]
+        datasize_tf_to_tg_ratio = datasize_tf / datasize_tg
+        ttr_tf = ttr_table.loc[lan_tf].values[0]
+        ttr_tg = ttr_table.loc[lan_tg].values[0]
+        ttr_distance = (1 - ttr_tf / ttr_tg) ** 2
+        distance_list = [dtable.loc[convert(lan_tf), convert(lan_tg)] for dtable in distance_tables]
+
+        extracted_type.append([overlap_word, datasize_tf, datasize_tg, datasize_tf_to_tg_ratio, ttr_tf, ttr_tg, ttr_distance] + distance_list)
 
     table = np.column_stack((table, np.array(extracted_type)))
 

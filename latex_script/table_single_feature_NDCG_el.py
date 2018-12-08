@@ -3,7 +3,7 @@ import json
 
 def main():
     # Working directory on clio
-    root = "/home/yuhsianl/public/phoneme_common_data/data/el2"
+    root = "/home/yuhsianl/public/phoneme_common_data/data/el"
 
     # Working directory on your local machine
     # root = "/Users/yuhsianglin/Dropbox/cmu/11634A_11632A_capstone/20181029 Jupyter notebook"
