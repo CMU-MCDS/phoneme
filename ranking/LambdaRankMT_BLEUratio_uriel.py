@@ -25,11 +25,8 @@ if __name__ == "__main__":
     # Data directory on clio
     root = "/home/yuhsianl/public/phoneme_common_data/data/mt"
 
-    # Data directory on your local machine
-    # root = "/Users/yuhsianglin/Dropbox/cmu/phoneme_data/mt"
-
     # Create directory for output
-    output_dir = os.path.join('.', "output_mt")
+    output_dir = os.path.join(root, "output_mt_BLEUratio_uriel")
     if not os.path.isdir(output_dir):
         os.makedirs(output_dir)
 
@@ -59,14 +56,11 @@ if __name__ == "__main__":
     #   },
     #  ...
     # }
-    NDCG_output_dict = {"LambdaRank": {"task_lang": [], "NDCG_list": [], "avg": -1, "std": -1}}
     ratio_output_dict = {"LambdaRank": {"task_lang": [], "ratio_list": [], "avg": -1, "std": -1}}
 
-    single_feature_name_list = ["Overlap word-level", "Overlap subword-level", "Transfer lang dataset size", "Target lang dataset size", "Transfer over target size ratio", "Transfer lang TTR", "Target lang TTR", "Transfer target TTR distance", "GENETIC", "SYNTACTIC", "FEATURAL", "PHONOLOGICAL", "INVENTORY", "GEOGRAPHIC"]
+    single_feature_name_list = ["GENETIC", "SYNTACTIC", "FEATURAL", "PHONOLOGICAL", "INVENTORY", "GEOGRAPHIC"]
     for feature in single_feature_name_list:
-        NDCG_output_dict[feature] = {"task_lang": [], "NDCG_list": [], "avg": -1, "std": -1}
         ratio_output_dict[feature] = {"task_lang": [], "ratio_list": [], "avg": -1, "std": -1}
-
 
     for task_lang_idx in range(lang_set.shape[0]):
         test_lang_set = [lang_set[task_lang_idx]]
@@ -100,13 +94,14 @@ if __name__ == "__main__":
             row = data[data_row_idx]
             task_lang = str(row[0])
             aux_lang = str(row[1])
+            BLEU = float(row[2])
             rank = int(row[3])
             BLEU_level = int(row[4])
             rel_exp = lgbm_rel_exp(BLEU_level, REL_EXP_CUTOFF)
 
             # Features are:
-            # ["Aux lang TTR", "Overlap word-level", "Overlap subword-level", "Aux lang dataset size", "TTR difference ratio", "Dataset size ratio", "Task lang dataset size", "GEOGRAPHIC", "GENETIC", "SYNTACTIC", "FEATURAL", "INVENTORY", "PHONOLOGICAL"]
-            features = row[5:]
+            # ["Overlap word-level", "Overlap subword-level", "Transfer lang dataset size", "Target lang dataset size", "Transfer over target size ratio", "Transfer lang TTR", "Target lang TTR", "Transfer target TTR distance", "GENETIC", "SYNTACTIC", "FEATURAL", "PHONOLOGICAL", "INVENTORY", "GEOGRAPHIC"]
+            features = row[-6:]
 
             # Here we use BLEU_level as our relevance exponent
             line_out = [str(rel_exp)]
@@ -115,13 +110,13 @@ if __name__ == "__main__":
 
             if task_lang in train_lang_set and aux_lang in train_lang_set:
                 print(" ".join(line_out), file=rank_train_file)
-                print(",".join([task_lang, aux_lang, str(rank)] + list(map(str, features)) + [str(BLEU_level)]), file=rank_train_lang_pair_file)
+                print(",".join([task_lang, aux_lang, str(rank), str(BLEU)] + list(map(str, features))), file=rank_train_lang_pair_file)
                 train_qg_size[task_lang] += 1
                 if task_lang not in train_query_seq:
                     train_query_seq.append(task_lang)
             elif task_lang in test_lang_set and aux_lang in train_lang_set:
                 print(" ".join(line_out), file=rank_test_file)
-                print(",".join([task_lang, aux_lang, str(rank)] + list(map(str, features)) + [str(BLEU_level)]), file=rank_test_lang_pair_file)
+                print(",".join([task_lang, aux_lang, str(rank), str(BLEU)] + list(map(str, features))), file=rank_test_lang_pair_file)
                 test_qg_size[task_lang] += 1
                 if task_lang not in test_query_seq:
                     test_query_seq.append(task_lang)
@@ -174,21 +169,18 @@ if __name__ == "__main__":
             qg_scores = predict_scores[qg_start_idx:qg_start_idx + int(qg_size)]
             best_aux_idx = np.argsort(-qg_scores)   # argsort: ascending
             task_lang = test_lang_pair[qg_start_idx, 0]
-            task_size = test_lang_pair[qg_start_idx, 8]     # Need to change this if features change!
 
             true_ranking = test_lang_pair[qg_start_idx:qg_start_idx + int(qg_size), 2].astype(int)
-            true_bleus = test_lang_pair[qg_start_idx:qg_start_idx + int(qg_size), -1].astype(float)
+            true_BLEUs = test_lang_pair[qg_start_idx:qg_start_idx + int(qg_size), 3].astype(float)
             true_best_aux_idx = np.argsort(true_ranking)
-            best_bleu = true_bleus[true_best_aux_idx[0]]
-
-
+            true_best_BLEU = true_BLEUs[true_best_aux_idx[0]]
 
             # topK_output_dict should be:
             # {
             #  "task_lang": task lang,
-            #  "LambdaRank": [[top 1 aux lang, top 2 aux lang, top 3 aux lang], [true rank 1, true rank 2, true rank 3]],
-            #  "single feature 1": [[top 1 aux lang, top 2 aux lang, top 3 aux lang], [true rank 1, true rank 2, true rank 3]],
-            #  "single feature 2": [[top 1 aux lang, top 2 aux lang, top 3 aux lang], [true rank 1, true rank 2, true rank 3]],
+            #  "LambdaRank": [[top 1 aux lang, top 2 aux lang, top 3 aux lang], [true rank 1, true rank 2, true rank 3], [true BLEU 1, true BLEU 2, true BLEU 3]],
+            #  "single feature 1": [[top 1 aux lang, top 2 aux lang, top 3 aux lang], [true rank 1, true rank 2, true rank 3], [true BLEU 1, true BLEU 2, true BLEU 3]],
+            #  "single feature 2": [[top 1 aux lang, top 2 aux lang, top 3 aux lang], [true rank 1, true rank 2, true rank 3], [true BLEU 1, true BLEU 2, true BLEU 3]],
             #  ...
             # }
             # We will save it as an json file
@@ -197,25 +189,27 @@ if __name__ == "__main__":
             # Extract top-K results
             topK_aux_lang_list = []
             topK_true_rank_list = []
-            topK_aux_bleu_list = []
+            topK_true_BLEU_list = []
             for topK_k in range(PRINT_TOP_K):
                 test_lang_pair_row = test_lang_pair[qg_start_idx + best_aux_idx[topK_k]]
-                # The first 3 columns are: task_lang, aux_lang, str(rank)
+                # The first 4 columns are: task_lang, aux_lang, str(rank), str(BLEU)
                 assert(test_lang_pair_row[0] == task_lang)
                 topK_aux_lang_list.append(test_lang_pair_row[1])
                 topK_true_rank_list.append(int(test_lang_pair_row[2]))
-                topK_aux_bleu_list.append(int(test_lang_pair_row[-1]))
-            topK_output_dict["LambdaRank"] = [topK_aux_lang_list, topK_true_rank_list]
+                topK_true_BLEU_list.append(float(test_lang_pair_row[3]))
+            topK_output_dict["LambdaRank"] = [topK_aux_lang_list, topK_true_rank_list, topK_true_BLEU_list]
 
             # Extract true top-K
             true_topK_aux_lang_list = []
             true_topK_true_rank_list = []
+            true_topK_true_BLEU_list = []
             for topK_k in range(PRINT_TOP_K):
                 test_lang_pair_row = test_lang_pair[qg_start_idx + true_best_aux_idx[topK_k]]
-                # The first 3 columns are: task_lang, aux_lang, str(rank)
+                # The first 4 columns are: task_lang, aux_lang, str(rank), str(BLEU)
                 true_topK_aux_lang_list.append(test_lang_pair_row[1])
                 true_topK_true_rank_list.append(int(test_lang_pair_row[2]))
-            topK_output_dict["Truth"] = [true_topK_aux_lang_list, true_topK_true_rank_list]
+                true_topK_true_BLEU_list.append(float(test_lang_pair_row[3]))
+            topK_output_dict["Truth"] = [true_topK_aux_lang_list, true_topK_true_rank_list, true_topK_true_BLEU_list]
 
             # Extract top-K results by each single feature
             # single_feature_name_list = ["Overlap word-level", "Overlap subword-level", "Transfer lang dataset size", "Target lang dataset size", "Transfer over target size ratio", "Transfer lang TTR", "Target lang TTR", "Transfer target TTR distance", "GENETIC", "SYNTACTIC", "FEATURAL", "PHONOLOGICAL", "INVENTORY", "GEOGRAPHIC"]
@@ -224,32 +218,34 @@ if __name__ == "__main__":
             # Smaller value is better (e.g. distance) => sign = +1
             # Larger value is better (e.g. dataset size) => sign = -1
             # 0 means we ignore this feature (don't compute single-feature result of it)
-            sort_sign_list = [-1, -1, -1, 0, -1, 0, 0, 1, 1, 1, 1, 1, 1, 1]
+            sort_sign_list = [1, 1, 1, 1, 1, 1]
             assert(len(sort_sign_list) == len(single_feature_name_list))
 
             topK_aux_lang_by_single_feature_lists = [[] for _ in range(len(single_feature_name_list))]
             topK_true_rank_by_single_feature_lists = [[] for _ in range(len(single_feature_name_list))]
-            topK_aux_bleu_by_single_feature_lists = [[] for _ in range(len(single_feature_name_list))]
+            topK_true_BLEU_by_single_feature_lists = [[] for _ in range(len(single_feature_name_list))]
 
             for single_feature_idx in range(len(single_feature_name_list)):
                 if sort_sign_list[single_feature_idx] != 0:
-                    single_feature_value_list = test_lang_pair[qg_start_idx:qg_start_idx + int(qg_size), 3 + single_feature_idx].astype(float)
+                    # The first 4 columns are: task_lang, aux_lang, str(rank), str(BLEU)
+                    offset = 4
+                    single_feature_value_list = test_lang_pair[qg_start_idx:qg_start_idx + int(qg_size), offset + single_feature_idx].astype(float)
                     best_aux_idx_by_single_feature_lists[single_feature_idx] = np.argsort(sort_sign_list[single_feature_idx] * single_feature_value_list)
                     for topK_k in range(PRINT_TOP_K):
                         aux_lang_got = test_lang_pair[qg_start_idx + best_aux_idx_by_single_feature_lists[single_feature_idx][topK_k], 1]
                         true_rank_got = test_lang_pair[qg_start_idx + best_aux_idx_by_single_feature_lists[single_feature_idx][topK_k], 2]
-                        aux_bleu_got = test_lang_pair[qg_start_idx + best_aux_idx_by_single_feature_lists[single_feature_idx][topK_k], -1]
+                        true_BLEU_got = test_lang_pair[qg_start_idx + best_aux_idx_by_single_feature_lists[single_feature_idx][topK_k], 3]
 
                         topK_aux_lang_by_single_feature_lists[single_feature_idx].append(aux_lang_got)
                         topK_true_rank_by_single_feature_lists[single_feature_idx].append(int(true_rank_got))
-                        topK_aux_bleu_by_single_feature_lists[single_feature_idx].append(int(aux_bleu_got))
+                        topK_true_BLEU_by_single_feature_lists[single_feature_idx].append(float(true_BLEU_got))
 
-                    topK_output_dict[single_feature_name_list[single_feature_idx]] = [topK_aux_lang_by_single_feature_lists[single_feature_idx], topK_true_rank_by_single_feature_lists[single_feature_idx], topK_aux_bleu_by_single_feature_lists[single_feature_idx]]
+                    topK_output_dict[single_feature_name_list[single_feature_idx]] = [topK_aux_lang_by_single_feature_lists[single_feature_idx], topK_true_rank_by_single_feature_lists[single_feature_idx], topK_true_BLEU_by_single_feature_lists[single_feature_idx]]
 
             with open(os.path.join(output_dir, "topK_" + lang_set[task_lang_idx] + ".json"), "w") as f:
                 json.dump(topK_output_dict, f)
 
-            # Compute NDCG
+            # Compute BLEU ratio
             print("[DEBUG] y_train =", y_train)
             print("[DEBUG] y_test =", y_test)
 
@@ -261,9 +257,9 @@ if __name__ == "__main__":
             # NDCG_output_dict["LambdaRank"]["task_lang"].append(lang_set[task_lang_idx])
             # NDCG_output_dict["LambdaRank"]["NDCG_list"].append(NDCG)
 
-            ratioes = max(topK_aux_bleu_list) / best_bleu
+            ratio = max(topK_true_BLEU_list) / true_best_BLEU
             ratio_output_dict["LambdaRank"]["task_lang"].append(lang_set[task_lang_idx])
-            ratio_output_dict["LambdaRank"]["ratio_list"].append(ratioes)
+            ratio_output_dict["LambdaRank"]["ratio_list"].append(ratio)
 
             for single_feature_idx in range(len(single_feature_name_list)):
                 if sort_sign_list[single_feature_idx] != 0:
@@ -272,12 +268,10 @@ if __name__ == "__main__":
                     # NDCG_output_dict[single_feature_name_list[single_feature_idx]]["task_lang"].append(lang_set[task_lang_idx])
                     # NDCG_output_dict[single_feature_name_list[single_feature_idx]]["NDCG_list"].append(NDCG_single_feature)
 
-                    ratio_row = topK_output_dict[single_feature_name_list[single_feature_idx]]
-                    ratio_single_feature = max(ratio_row[2]) / best_bleu
+                    ratio_single_feature = max(topK_true_BLEU_by_single_feature_lists[single_feature_idx]) / true_best_BLEU
                     ratio_output_dict[single_feature_name_list[single_feature_idx]]["task_lang"].append(
                         lang_set[task_lang_idx])
-                    ratio_output_dict[single_feature_name_list[single_feature_idx]]["ratio_list"].append(
-                        ratio_single_feature)
+                    ratio_output_dict[single_feature_name_list[single_feature_idx]]["ratio_list"].append(ratio_single_feature)
                 else:
                     # Remove the un-used feature item placeholder
                     # if single_feature_name_list[single_feature_idx] in NDCG_output_dict:
