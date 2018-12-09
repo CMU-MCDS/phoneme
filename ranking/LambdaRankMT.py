@@ -25,9 +25,6 @@ if __name__ == "__main__":
     # Data directory on clio
     root = "/home/yuhsianl/public/phoneme_common_data/data/mt"
 
-    # Data directory on your local machine
-    # root = "/Users/yuhsianglin/Dropbox/cmu/phoneme_data/mt"
-
     # Create directory for output
     output_dir = os.path.join(root, "output_mt")
     if not os.path.isdir(output_dir):
@@ -171,7 +168,6 @@ if __name__ == "__main__":
             qg_scores = predict_scores[qg_start_idx:qg_start_idx + int(qg_size)]
             best_aux_idx = np.argsort(-qg_scores)   # argsort: ascending
             task_lang = test_lang_pair[qg_start_idx, 0]
-            task_size = test_lang_pair[qg_start_idx, 8]     # Need to change this if features change!
 
             true_ranking = test_lang_pair[qg_start_idx:qg_start_idx + int(qg_size), 2].astype(int)
             true_best_aux_idx = np.argsort(true_ranking)

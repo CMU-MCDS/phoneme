@@ -30,7 +30,7 @@ if __name__ == "__main__":
     root = "/home/yuhsianl/public/phoneme_common_data/data/pos"
 
     # Create directory for output
-    output_dir = os.path.join(root, "output_pos")
+    output_dir = os.path.join(root, "output_pos_dataset")
     if not os.path.isdir(output_dir):
         os.makedirs(output_dir)
 
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     # }
     NDCG_output_dict = {"LambdaRank": {"task_lang": [], "NDCG_list": [], "avg": -1, "std": -1}}
 
-    single_feature_name_list = ["Overlap word-level", "Transfer lang dataset size", "Target lang dataset size", "Transfer over target size ratio", "Transfer lang TTR", "Target lang TTR", "Transfer target TTR distance", "GENETIC", "SYNTACTIC", "FEATURAL", "PHONOLOGICAL", "INVENTORY", "GEOGRAPHIC"]
+    single_feature_name_list = ["Overlap word-level", "Transfer lang dataset size", "Target lang dataset size", "Transfer over target size ratio", "Transfer lang TTR", "Target lang TTR", "Transfer target TTR distance"]
     for feature in single_feature_name_list:
         NDCG_output_dict[feature] = {"task_lang": [], "NDCG_list": [], "avg": -1, "std": -1}
 
@@ -107,7 +107,7 @@ if __name__ == "__main__":
 
             # Features are:
             # ["Overlap word-level", "Transfer lang dataset size", "Target lang dataset size", "Transfer over target size ratio", "Transfer lang TTR", "Target lang TTR", "Transfer target TTR distance", "GENETIC", "SYNTACTIC", "FEATURAL", "PHONOLOGICAL", "INVENTORY", "GEOGRAPHIC"]
-            features = row[5:]
+            features = row[5:-6]
 
             # Here we use acc_level as our relevance exponent
             line_out = [str(rel_exp)]
@@ -218,7 +218,7 @@ if __name__ == "__main__":
             # Smaller value is better (e.g. distance) => sign = +1
             # Larger value is better (e.g. dataset size) => sign = -1
             # 0 means we ignore this feature (don't compute single-feature result of it)
-            sort_sign_list = [-1, -1, 0, -1, 0, 0, 1, 1, 1, 1, 1, 1, 1]
+            sort_sign_list = [-1, -1, 0, -1, 0, 0, 1]
             assert(len(sort_sign_list) == len(single_feature_name_list))
 
             topK_aux_lang_by_single_feature_lists = [[] for _ in range(len(single_feature_name_list))]
