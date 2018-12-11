@@ -11,7 +11,7 @@ def main():
     # The head and tail of the latex table
     latex_head = "\\begin{table}[t!]\n\\begin{center}\n\\begin{tabular}{ccc}\n\\midrule\n\\bf Task Lang & \\bf Suggested Lang & \\bf True Best Lang \\\\\n\\midrule\n"
 
-    MAX_ROW_NUM = 14
+    MAX_ROW_NUM = 10
     TOTAL_ROW_NUM = 54
     latex_filling_list = ["" for _ in range(int(math.ceil(TOTAL_ROW_NUM / MAX_ROW_NUM)))]
     cnt = 0
