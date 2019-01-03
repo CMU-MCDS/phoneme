@@ -49,4 +49,10 @@ ranking/train_pos
 
 .idea/
 
+ranking/train_parsing
+
+ranking/langrank
+ranking/run_MT.py
+
+
 
